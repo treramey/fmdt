@@ -95,7 +95,7 @@ export function BranchInput({ onSubmit }: BranchInputProps): React.JSX.Element {
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
         <Text bold color={colors.iris}>
-          Enter branch name:
+          Enter ticket number:
         </Text>
       </Box>
       <Box
