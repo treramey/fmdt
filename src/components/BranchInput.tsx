@@ -101,7 +101,7 @@ export function BranchInput({ onSubmit }: BranchInputProps): React.JSX.Element {
         <Text>{displayValue || '█'}</Text>
       </Box>
       <Box marginTop={1}>
-        <Text dimColor>Press Enter to submit, Arrow keys (↑↓) for history, Ctrl+C to exit</Text>
+        <Text dimColor>Enter: Search, Arrow keys (↑↓): Navigate, Ctrl+C: Exit</Text>
       </Box>
     </Box>
   );
