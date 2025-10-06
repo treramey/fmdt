@@ -157,8 +157,8 @@ describe('MultiRepositoryMergeStatusDisplay', () => {
       const { lastFrame } = render(<MultiRepositoryMergeStatusDisplay {...result} />);
 
       const output = lastFrame();
-      expect(output).toContain('Ctrl+C to exit');
-      expect(output).toContain('Enter to search');
+      expect(output).toContain('Ctrl+C: Exit');
+      expect(output).toContain('Enter: New Search');
     });
 
     test('should display keyboard shortcuts when branch not found', () => {
@@ -175,8 +175,8 @@ describe('MultiRepositoryMergeStatusDisplay', () => {
       const { lastFrame } = render(<MultiRepositoryMergeStatusDisplay {...result} />);
 
       const output = lastFrame();
-      expect(output).toContain('Ctrl+C to exit');
-      expect(output).toContain('Enter for new search');
+      expect(output).toContain('Ctrl+C: Exit');
+      expect(output).toContain('Enter: New Search');
     });
   });
 });
