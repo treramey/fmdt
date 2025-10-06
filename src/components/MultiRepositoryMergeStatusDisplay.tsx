@@ -35,7 +35,7 @@ export function MultiRepositoryMergeStatusDisplay({
       <Box flexDirection="column" padding={1}>
         <Text color={colors.gold}>Branch not found in any of {operationSummary.total} repositories</Text>
         <Box marginTop={1}>
-          <Text color={colors.muted}>Enter: Search new branch, Ctrl+C: Exit</Text>
+          <Text color={colors.muted}>Enter: New Search, Ctrl+C: Exit</Text>
         </Box>
       </Box>
     );
@@ -66,7 +66,7 @@ export function MultiRepositoryMergeStatusDisplay({
 
       {/* FOOTER */}
       <Box marginTop={1}>
-        <Text color={colors.muted}>Press Ctrl+C to exit | Enter to search new branch</Text>
+        <Text color={colors.muted}>Enter: New Search, Ctrl+C: Exit</Text>
       </Box>
     </Box>
   );
