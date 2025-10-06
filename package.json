@@ -3,8 +3,16 @@
   "type": "module",
   "version": "1.0.1",
   "description": "CLI tool for checking if a branch has been merged into feature branches (dev, qa, staging, master)",
-  "author": "treramey <trevor@trevors.email",
   "license": "MIT",
+  "author": "treramey <trevor@trevors.email>",
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/treramey/fmdt.git"
+  },
+  "homepage": "https://github.com/nyatinte/fmdt#readme",
+  "bugs": {
+    "url": "https://github.com/nyatinte/fmdt/issues"
+  },
   "keywords": [
     "azure-devops",
     "cli",
