@@ -1,15 +1,7 @@
 import { Box, Text } from 'ink';
 import type React from 'react';
 import type { BranchMergeStatus } from '../types/index.js';
-
-const colors = {
-  text: '#e0def4',
-  gold: '#f6c177',
-  overlay: '#26233a',
-  rose: '#ebbcba',
-  iris: '#c4a7e7',
-  pine: '#31748f',
-} as const;
+import { colors } from '../utils/colors.js';
 
 type StatusSummaryProps = {
   status: BranchMergeStatus;

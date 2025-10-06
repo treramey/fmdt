@@ -1,5 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import React from 'react';
+import { colors } from '../utils/colors.js';
 import { loadHistory } from '../utils/history.js';
 
 type BranchInputProps = {
@@ -93,15 +94,26 @@ export function BranchInput({ onSubmit }: BranchInputProps): React.JSX.Element {
   return (
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
-        <Text bold color="cyan">
+        <Text bold color={colors.iris}>
           Enter branch name:
         </Text>
       </Box>
-      <Box>
-        <Text>{displayValue || '█'}</Text>
+      <Box
+        borderStyle="single"
+        borderColor={colors.iris}
+        borderTop
+        borderBottom
+        borderLeft={false}
+        borderRight={false}
+        paddingX={1}
+      >
+        <Text color={colors.text}>
+          <Text color={colors.iris}>{'> '}</Text>
+          {displayValue || '█'}
+        </Text>
       </Box>
       <Box marginTop={1}>
-        <Text dimColor>Enter: Search, Arrow keys (↑↓): Navigate, Ctrl+C: Exit</Text>
+        <Text color={colors.muted}>Enter: Search, Arrow keys (↑↓): Navigate, Ctrl+C: Exit</Text>
       </Box>
     </Box>
   );

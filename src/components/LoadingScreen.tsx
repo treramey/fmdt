@@ -1,6 +1,7 @@
 import { Spinner } from '@inkjs/ui';
 import { Box, Text } from 'ink';
 import type React from 'react';
+import { colors } from '../utils/colors.js';
 
 type LoadingScreenProps = {
   message?: string;
@@ -11,7 +12,7 @@ export function LoadingScreen({ message = 'Loading...' }: LoadingScreenProps): R
     <Box flexDirection="column" padding={2}>
       <Box>
         <Spinner />
-        <Text> {message}</Text>
+        <Text color={colors.text}> {message}</Text>
       </Box>
     </Box>
   );

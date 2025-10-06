@@ -1,18 +1,9 @@
 import { Box, Text } from 'ink';
 import type React from 'react';
 import type { BranchMergeStatus } from '../types/index.js';
+import { colors, semanticColors } from '../utils/colors.js';
 import { formatDateShort } from '../utils/formatters.js';
 import { StatusSummary } from './StatusSummary.js';
-
-const colors = {
-  text: '#e0def4',
-  muted: '#6e6a86',
-  subtle: '#908caa',
-  overlay: '#26233a',
-  success: '#9ccfd8',
-  error: '#eb6f92',
-  iris: '#c4a7e7',
-} as const;
 
 type MergeStatusDisplayProps = {
   status: BranchMergeStatus;
@@ -81,7 +72,7 @@ export function MergeStatusDisplay({ status }: MergeStatusDisplayProps): React.J
             </Box>
             <Box width={20} flexShrink={0}>
               <Text>
-                <Text color={status.mergedTo.dev.merged ? colors.success : colors.error}>
+                <Text color={status.mergedTo.dev.merged ? semanticColors.success : semanticColors.error}>
                   {status.mergedTo.dev.merged ? '✓' : '✗'}
                 </Text>
                 <Text color={colors.subtle}> {status.mergedTo.dev.merged ? 'Merged' : 'Not Merged'}</Text>
@@ -106,7 +97,7 @@ export function MergeStatusDisplay({ status }: MergeStatusDisplayProps): React.J
             </Box>
             <Box width={20} flexShrink={0}>
               <Text>
-                <Text color={status.mergedTo.qa.merged ? colors.success : colors.error}>
+                <Text color={status.mergedTo.qa.merged ? semanticColors.success : semanticColors.error}>
                   {status.mergedTo.qa.merged ? '✓' : '✗'}
                 </Text>
                 <Text color={colors.subtle}> {status.mergedTo.qa.merged ? 'Merged' : 'Not Merged'}</Text>
@@ -131,7 +122,7 @@ export function MergeStatusDisplay({ status }: MergeStatusDisplayProps): React.J
             </Box>
             <Box width={20} flexShrink={0}>
               <Text>
-                <Text color={status.mergedTo.staging.merged ? colors.success : colors.error}>
+                <Text color={status.mergedTo.staging.merged ? semanticColors.success : semanticColors.error}>
                   {status.mergedTo.staging.merged ? '✓' : '✗'}
                 </Text>
                 <Text color={colors.subtle}> {status.mergedTo.staging.merged ? 'Merged' : 'Not Merged'}</Text>
@@ -156,7 +147,7 @@ export function MergeStatusDisplay({ status }: MergeStatusDisplayProps): React.J
             </Box>
             <Box width={20} flexShrink={0}>
               <Text>
-                <Text color={status.mergedTo.master.merged ? colors.success : colors.error}>
+                <Text color={status.mergedTo.master.merged ? semanticColors.success : semanticColors.error}>
                   {status.mergedTo.master.merged ? '✓' : '✗'}
                 </Text>
                 <Text color={colors.subtle}> {status.mergedTo.master.merged ? 'Merged' : 'Not Merged'}</Text>

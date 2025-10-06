@@ -1,16 +1,8 @@
 import { Box, Text, useInput } from 'ink';
 import type React from 'react';
 import type { MultiRepositoryResult } from '../types/index.js';
+import { colors } from '../utils/colors.js';
 import { MergeStatusDisplay } from './MergeStatusDisplay.js';
-
-// Rose Pine color scheme
-const colors = {
-  text: '#e0def4',
-  muted: '#6e6a86',
-  love: '#eb6f92',
-  gold: '#f6c177',
-  foam: '#9ccfd8',
-} as const;
 
 type MultiRepositoryMergeStatusDisplayProps = MultiRepositoryResult & {
   readonly onNewSearch?: () => void;
