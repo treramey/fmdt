@@ -1,28 +1,66 @@
 import type {
   BatchOperationResult,
   BranchMergeStatus,
+  GetProjectsResponse,
   GetPullRequestsResponse,
   GetRepositoriesResponse,
   GitDiffResponse,
   MultiRepositoryResult,
   ParsedPullRequest,
+  Project,
   PullRequest,
   PullRequestDetails,
   Repository,
+  RuntimeConfig,
 } from '../types/index.js';
 import { isFulfilledResult, isRejectedResult } from '../types/index.js';
-import { createAuthHeader, getConfig } from '../utils/config.js';
+import { createAuthHeader } from '../utils/config.js';
 
 const PAGE_SIZE = 101;
 
 export class AzureDevOpsService {
   private readonly authHeader: string;
   private readonly baseUrl: string;
+  private readonly org: string;
 
-  constructor() {
-    const config = getConfig();
+  constructor(config: RuntimeConfig) {
+    // CRITICAL: Config must be provided (loaded asynchronously before creating service)
     this.authHeader = createAuthHeader(config.azureDevOpsPat);
+    this.org = config.azureDevOpsOrg;
     this.baseUrl = `https://dev.azure.com/${config.azureDevOpsOrg}/${config.azureDevOpsProject}/_apis/git/repositories/`;
+  }
+
+  async getProjects(): Promise<Project[]> {
+    const url = `https://dev.azure.com/${this.org}/_apis/projects?api-version=7.1`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: this.authHeader,
+        Accept: 'application/json',
+      },
+    });
+
+    // CRITICAL: Distinguish between different error types
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(
+        'Invalid PAT token. Please check your Personal Access Token has ' +
+          'the required scopes: Code (Read), Project and Team (Read)',
+      );
+    }
+
+    if (response.status === 404) {
+      throw new Error(
+        'Organization not found. Please check the organization name is correct. ' +
+          'It should match the URL: https://dev.azure.com/YOUR-ORG-NAME',
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch projects: ${response.status} ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as GetProjectsResponse;
+    return data.value;
   }
 
   async getRepositories(): Promise<Repository[]> {

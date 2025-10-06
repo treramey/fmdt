@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { BranchMergeStatus, Repository } from '../src/types/index.js';
+import { AzureDevOpsService } from '../src/services/azure-devops.js';
+import type { BranchMergeStatus, Project, Repository, RuntimeConfig } from '../src/types/index.js';
 
 // Create a minimal mock service for testing
 class MockAzureDevOpsService {
@@ -57,6 +58,123 @@ class MockAzureDevOpsService {
     };
   }
 }
+
+describe('AzureDevOpsService.getProjects', () => {
+  const mockConfig: RuntimeConfig = {
+    azureDevOpsPat: 'test-pat-123',
+    azureDevOpsOrg: 'test-org',
+    azureDevOpsProject: 'test-project',
+  };
+
+  test('should fetch projects successfully', async () => {
+    const mockProjects: Project[] = [
+      {
+        id: 'proj-1',
+        name: 'Project One',
+        description: 'First project',
+        url: 'https://dev.azure.com/test-org/_apis/projects/proj-1',
+        state: 'wellFormed',
+        revision: 1,
+        visibility: 'private',
+        lastUpdateTime: '2025-01-01T00:00:00Z',
+      },
+      {
+        id: 'proj-2',
+        name: 'Project Two',
+        description: 'Second project',
+        url: 'https://dev.azure.com/test-org/_apis/projects/proj-2',
+        state: 'wellFormed',
+        revision: 1,
+        visibility: 'private',
+        lastUpdateTime: '2025-01-02T00:00:00Z',
+      },
+    ];
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ value: mockProjects, count: 2 }),
+    });
+
+    const service = new AzureDevOpsService(mockConfig);
+    const projects = await service.getProjects();
+
+    expect(projects).toEqual(mockProjects);
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://dev.azure.com/test-org/_apis/projects?api-version=7.1',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: expect.stringMatching(/^Basic /),
+          Accept: 'application/json',
+        }),
+      }),
+    );
+  });
+
+  test('should throw error with helpful message for invalid PAT (401)', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      statusText: 'Unauthorized',
+    });
+
+    const service = new AzureDevOpsService(mockConfig);
+
+    await expect(service.getProjects()).rejects.toThrow('Invalid PAT token');
+    await expect(service.getProjects()).rejects.toThrow('Code (Read), Project and Team (Read)');
+  });
+
+  test('should throw error with helpful message for invalid PAT (403)', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+    });
+
+    const service = new AzureDevOpsService(mockConfig);
+
+    await expect(service.getProjects()).rejects.toThrow('Invalid PAT token');
+    await expect(service.getProjects()).rejects.toThrow('Code (Read), Project and Team (Read)');
+  });
+
+  test('should throw error with helpful message for organization not found (404)', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+    });
+
+    const service = new AzureDevOpsService(mockConfig);
+
+    await expect(service.getProjects()).rejects.toThrow('Organization not found');
+    await expect(service.getProjects()).rejects.toThrow('https://dev.azure.com/YOUR-ORG-NAME');
+  });
+
+  test('should throw error for other HTTP errors', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    });
+
+    const service = new AzureDevOpsService(mockConfig);
+
+    await expect(service.getProjects()).rejects.toThrow('Failed to fetch projects: 500 Internal Server Error');
+  });
+
+  test('should handle empty project list', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ value: [], count: 0 }),
+    });
+
+    const service = new AzureDevOpsService(mockConfig);
+    const projects = await service.getProjects();
+
+    expect(projects).toEqual([]);
+  });
+});
 
 describe('AzureDevOpsService.getBatchBranchMergeStatus', () => {
   let service: MockAzureDevOpsService;

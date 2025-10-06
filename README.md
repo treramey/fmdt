@@ -40,42 +40,69 @@ npm link
 
 ## Configuration
 
-1. Copy the `.env.example` file to `.env`:
+### First-Time Setup
 
-```bash
-cp .env.example .env
-```
+When you run `fmdt` for the first time, you'll be guided through an interactive setup wizard that will:
 
-2. Edit `.env` and fill in your Azure DevOps credentials:
+1. Prompt you for your Azure DevOps Personal Access Token (PAT)
+2. Ask for your organization name
+3. Validate your credentials
+4. Let you select a project from your organization
+5. Securely store your configuration
 
-```env
-AZURE_DEVOPS_PAT=your_personal_access_token_here
-AZURE_DEVOPS_ORG=your_organization_name
-AZURE_DEVOPS_PROJECT=your_project_name
-```
+Your PAT is stored in your system's keychain (macOS Keychain, Windows Credential Manager, or Linux Secret Service), ensuring secure credential storage. The organization and project settings are saved in a configuration file.
 
 ### Getting an Azure DevOps PAT Token
+
+Before running the setup, create a Personal Access Token:
 
 1. Navigate to Azure DevOps: `https://dev.azure.com/{organization}`
 2. Click on User Settings → Personal Access Tokens
 3. Click "New Token"
 4. Set the following scopes:
    - **Code**: Read
-   - **Pull Request Threads**: Read
-5. Copy the token and save it to your `.env` file
+   - **Project and Team**: Read
+5. Copy the token - you'll enter it during the setup wizard
+
+### Reconfiguring
+
+To reconfigure your settings at any time:
+
+```bash
+fmdt --configure
+```
+
+This will delete your existing configuration and run the setup wizard again.
+
+### Configuration Storage
+
+- **PAT Token**: Stored securely in your system keychain
+  - macOS: Keychain Access (search for "fmdt")
+  - Windows: Credential Manager
+  - Linux: Secret Service (requires gnome-keyring or libsecret)
+- **Organization & Project**: Stored in a config file
+  - macOS: `~/Library/Application Support/fmdt/config.json`
+  - Linux: `~/.config/fmdt/config.json`
+  - Windows: `%APPDATA%\fmdt\config.json`
 
 ## Usage
 
 ### Basic Usage
 
 ```bash
+# First run - interactive setup wizard
+fmdt
+
 # Scan all repositories for a branch
 fmdt --branch feature-123
 
 # Using short flags
 fmdt -b feature-123
 
-# Interactive mode - will prompt for branch name
+# Reconfigure credentials
+fmdt --configure
+
+# Interactive mode - will prompt for branch name (if already configured)
 fmdt
 ```
 
@@ -261,26 +288,43 @@ bun run ci
 
 ## Troubleshooting
 
-### "AZURE_DEVOPS_PAT is not set" Error
+### Configuration Issues
 
-Make sure you have:
-1. Created a `.env` file in the project root
-2. Added your Azure DevOps PAT token to the `.env` file
-3. Restarted your terminal or re-sourced your environment
+**Setup wizard doesn't start:**
+- Try running `fmdt --configure` to force the setup wizard
 
-### "Failed to fetch repositories" Error
+**Invalid PAT or Organization errors:**
+- Verify your PAT has the correct scopes: Code (Read), Project and Team (Read)
+- Double-check your organization name matches the URL: `https://dev.azure.com/YOUR-ORG`
+- Ensure your PAT hasn't expired
 
-This usually means:
-1. Your PAT token is invalid or expired
-2. Your PAT token doesn't have the correct scopes (Code: Read, Pull Request Threads: Read)
-3. The organization or project name is incorrect
+**"Unable to save PAT to system keyring" error:**
+- **Linux users**: Install gnome-keyring or libsecret
+  ```bash
+  # Ubuntu/Debian
+  sudo apt-get install gnome-keyring libsecret-1-dev
 
-### "Repository not found" Error
+  # Fedora
+  sudo dnf install gnome-keyring libsecret-devel
+  ```
+- **macOS/Windows**: This error is rare; contact support if it occurs
 
-Double-check:
-1. The repository name is spelled correctly (case-sensitive)
-2. You have access to the repository
-3. The repository is not disabled
+### Runtime Issues
+
+**"PAT not found in keyring" error:**
+- Run `fmdt --configure` to set up your credentials again
+
+**"Configuration file not found" error:**
+- Run `fmdt --configure` to set up your credentials again
+
+**"Failed to fetch repositories" Error:**
+- Your PAT token may have expired - run `fmdt --configure` to update
+- Verify you have access to the organization and project
+
+**"Repository not found" Error:**
+- Double-check the repository name (case-sensitive)
+- Verify you have access to the repository
+- Ensure the repository is not disabled
 
 ## Contributing
 
