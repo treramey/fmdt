@@ -1,7 +1,7 @@
 {
   "name": "fmdt",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool for checking if a branch has been merged into feature branches (dev, qa, staging, master)",
   "author": "treramey <trevor@trevors.email",
   "license": "MIT",
