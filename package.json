@@ -5,7 +5,7 @@
   "description": "CLI tool for checking if a branch has been merged into feature branches (dev, qa, staging, master)",
   "license": "MIT",
   "author": "treramey <trevor@trevors.email>",
-    "repository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/treramey/fmdt.git"
   },
@@ -73,7 +73,9 @@
     "vite": "npm:rolldown-vite@latest"
   },
   "dependencies": {
+    "@folder/xdg": "^4.0.1",
     "@inkjs/ui": "^2.0.0",
+    "@napi-rs/keyring": "^1.2.0",
     "commander": "^14.0.0",
     "es-toolkit": "^1.39.7",
     "ink": "^6.0.1",

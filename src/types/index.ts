@@ -4,6 +4,7 @@ import { z } from 'zod/v4';
 export const CliOptionsSchema = z.object({
   branch: z.string().optional(),
   repository: z.string().optional(),
+  configure: z.boolean().optional(), // NEW: trigger setup flow
   help: z.boolean().optional(),
   version: z.boolean().optional(),
 });
@@ -118,13 +119,6 @@ export type BranchMergeStatus = {
   };
 };
 
-// Environment Configuration
-export type EnvironmentConfig = {
-  azureDevOpsPat: string;
-  azureDevOpsOrg: string;
-  azureDevOpsProject: string;
-};
-
 // Type guards for Promise.allSettled results
 export function isFulfilledResult<T>(result: PromiseSettledResult<T>): result is PromiseFulfilledResult<T> {
   return result.status === 'fulfilled';
@@ -147,3 +141,47 @@ export type MultiRepositoryResult = {
   statuses: BranchMergeStatus[];
   operationSummary: BatchOperationResult;
 };
+
+// Azure DevOps Project type (from API)
+export type Project = {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  state: string;
+  revision: number;
+  visibility: string;
+  lastUpdateTime: string;
+};
+
+// Projects API response
+export type GetProjectsResponse = {
+  value: Project[];
+  count: number;
+};
+
+// Configuration file schema (stored on disk)
+export const ConfigFileSchema = z.object({
+  azureDevOpsOrg: z.string().min(1),
+  azureDevOpsProject: z.string().min(1),
+  version: z.string().default('1.0.0'), // For future migrations
+});
+
+export type ConfigFile = z.infer<typeof ConfigFileSchema>;
+
+// Runtime configuration (includes PAT from keyring)
+export type RuntimeConfig = {
+  azureDevOpsPat: string;
+  azureDevOpsOrg: string;
+  azureDevOpsProject: string;
+};
+
+// Configuration setup state
+export type SetupState =
+  | { type: 'inputPat' }
+  | { type: 'validatingPat'; pat: string; org: string }
+  | { type: 'inputOrg'; pat: string }
+  | { type: 'selectProject'; pat: string; org: string; projects: Project[] }
+  | { type: 'savingConfig'; pat: string; org: string; project: string }
+  | { type: 'setupComplete' }
+  | { type: 'setupError'; error: string; canRetry: boolean };

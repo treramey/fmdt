@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink';
 import type React from 'react';
 import type { MultiRepositoryResult } from '../types/index.js';
 import { colors } from '../utils/colors.js';
+import { Footer } from './Footer.js';
 import { MergeStatusDisplay } from './MergeStatusDisplay.js';
 
 type MultiRepositoryMergeStatusDisplayProps = MultiRepositoryResult & {
@@ -13,53 +14,37 @@ export function MultiRepositoryMergeStatusDisplay({
   operationSummary,
   onNewSearch,
 }: MultiRepositoryMergeStatusDisplayProps): React.JSX.Element {
-  // Handle keyboard shortcuts
   useInput((_input, key) => {
-    // Handle Enter for new search
     if (key.return && onNewSearch) {
       onNewSearch();
     }
     // Note: Ctrl+C handled automatically by Ink
   });
-  // EDGE CASE: No repos have the branch
   if (statuses.length === 0) {
     return (
       <Box flexDirection="column" padding={1}>
         <Text color={colors.gold}>Branch not found in any of {operationSummary.total} repositories</Text>
-        <Box marginTop={1}>
-          <Text color={colors.muted}>Enter: New Search, Ctrl+C: Exit</Text>
-        </Box>
+        <Footer />
       </Box>
     );
   }
 
   return (
     <Box flexDirection="column" padding={1}>
-      {/* SUMMARY HEADER */}
-      <Box marginBottom={1}>
-        <Text bold color={colors.foam}>
-          Found branch in {statuses.length} of {operationSummary.total} repositories
-        </Text>
-      </Box>
-
-      {/* FAILURE WARNING if any repos failed */}
+      <Text bold color={colors.foam}>
+        Found branch in {statuses.length} of {operationSummary.total} repositories
+      </Text>
       {operationSummary.failed > 0 && (
-        <Box marginBottom={1}>
-          <Text color={colors.gold}>Warning: {operationSummary.failed} repositories failed to scan</Text>
-        </Box>
+        <Text color={colors.gold}>Warning: {operationSummary.failed} repositories failed to scan</Text>
       )}
 
-      {/* RENDER EACH REPOSITORY'S MERGE STATUS TABLE */}
       {statuses.map((status, index) => (
-        <Box key={status.repository} marginBottom={index < statuses.length - 1 ? 2 : 0}>
+        <Box key={status.repository} marginBottom={index < statuses.length - 1 ? 1 : 0}>
           <MergeStatusDisplay status={status} />
         </Box>
       ))}
 
-      {/* FOOTER */}
-      <Box marginTop={1}>
-        <Text color={colors.muted}>Enter: New Search, Ctrl+C: Exit</Text>
-      </Box>
+      <Footer showSearch />
     </Box>
   );
 }

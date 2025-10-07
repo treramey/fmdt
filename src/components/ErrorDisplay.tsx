@@ -10,10 +10,8 @@ type ErrorDisplayProps = {
 export function ErrorDisplay({ error }: ErrorDisplayProps): React.JSX.Element {
   return (
     <Box flexDirection="column" padding={1}>
+      <Text color={colors.rose}>Oh geez, Rick! Can't we just, y'know, refresh or something? This is the worst!</Text>
       <StatusMessage variant="error">Error: {error}</StatusMessage>
-      <Box marginTop={1}>
-        <Text color={colors.muted}>Press Ctrl+C to exit</Text>
-      </Box>
     </Box>
   );
 }
