@@ -5,7 +5,6 @@ export const CliOptionsSchema = z.object({
   branch: z.string().optional(),
   repository: z.string().optional(),
   configure: z.boolean().optional(), // NEW: trigger setup flow
-  reset: z.boolean().optional(), // NEW: clear config and exit
   help: z.boolean().optional(),
   version: z.boolean().optional(),
 });
@@ -179,7 +178,6 @@ export type RuntimeConfig = {
 
 // Configuration setup state
 export type SetupState =
-  | { type: 'welcome' }
   | { type: 'inputPat' }
   | { type: 'validatingPat'; pat: string; org: string }
   | { type: 'inputOrg'; pat: string }

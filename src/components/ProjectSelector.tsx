@@ -10,7 +10,6 @@ type ProjectSelectorProps = {
 };
 
 export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): React.JSX.Element {
-  // MAP projects to Select options: { label: project.name, value: project.name }
   const options = projects.map((project) => ({
     label: project.name,
     value: project.name,
@@ -26,11 +25,7 @@ export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): R
       <Box marginBottom={1}>
         <Text color={colors.muted}>Found {projects.length} projects</Text>
       </Box>
-      <Select
-        options={options}
-        onChange={onSelect}
-        visibleOptionCount={10} // Show more options than default 5
-      />
+      <Select options={options} onChange={onSelect} visibleOptionCount={10} />
     </Box>
   );
 }

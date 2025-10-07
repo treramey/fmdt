@@ -24,3 +24,12 @@ export const semanticColors = {
   primary: colors.iris,
   secondary: colors.rose,
 } as const;
+
+export const asciiArt = `
+███████╗███╗   ███╗██████╗ ████████╗
+██╔════╝████╗ ████║██╔══██╗╚══██╔══╝
+█████╗  ██╔████╔██║██║  ██║   ██║   
+██╔══╝  ██║╚██╔╝██║██║  ██║   ██║   
+██║     ██║ ╚═╝ ██║██████╔╝   ██║   
+╚═╝     ╚═╝     ╚═╝╚═════╝    ╚═╝   
+`;

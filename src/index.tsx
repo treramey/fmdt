@@ -20,34 +20,11 @@ program
   .version(packageJson.version)
   .option('-b, --branch <branch>', 'branch name to check')
   .option('-r, --repository <repository>', 'repository name (optional)')
-  .option('-c, --configure', 'Run configuration setup')
-  .option('--reset', 'Clear all configuration and exit')
+  .option('-c, --configure', 'run configuration setup')
   .parse();
 
 const rawOptions = program.opts();
 const options = CliOptionsSchema.parse(rawOptions);
-
-// Handle --reset flag: delete config and exit
-if (options.reset) {
-  console.log('🧹 Clearing configuration...');
-
-  await deletePatFromKeyring();
-
-  try {
-    const configPath = getConfigFilePath();
-    await rm(configPath, { force: true });
-    console.log('✓ Config file removed');
-  } catch {
-    console.log('ℹ  Config file not found (already clean)');
-  }
-
-  console.log('✓ PAT removed from keychain');
-  console.log('✅ Configuration cleared successfully!');
-  console.log('');
-  console.log('Run fmdt again to set up a new configuration.');
-
-  process.exit(0);
-}
 
 // Handle --configure flag: delete existing config and trigger setup
 if (options.configure) {

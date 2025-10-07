@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import React from 'react';
 import { colors } from '../utils/colors.js';
+import { Footer } from './Footer.js';
 
 type PatInputProps = {
   onSubmit: (pat: string) => void;
@@ -13,22 +14,26 @@ export function PatInput({ onSubmit }: PatInputProps): React.JSX.Element {
 
   useInput((input, key) => {
     if (key.return) {
-      // CRITICAL: Validate PAT before submitting
       if (value.trim().length < 10) {
         setError('PAT token is too short (minimum 10 characters)');
         return;
       }
       setError('');
       onSubmit(value.trim());
-    } else if (key.backspace || key.delete) {
+      return;
+    }
+
+    if (key.backspace || key.delete) {
       if (cursorPosition > 0) {
         const newValue = value.slice(0, cursorPosition - 1) + value.slice(cursorPosition);
         setValue(newValue);
         setCursorPosition(cursorPosition - 1);
         setError('');
       }
-    } else if (input && !key.ctrl && !key.meta) {
-      // Add character to input
+      return;
+    }
+
+    if (input && !key.ctrl && !key.meta) {
       const newValue = value.slice(0, cursorPosition) + input + value.slice(cursorPosition);
       setValue(newValue);
       setCursorPosition(cursorPosition + input.length);
@@ -36,16 +41,13 @@ export function PatInput({ onSubmit }: PatInputProps): React.JSX.Element {
     }
   });
 
-  // CRITICAL: Mask the entire value with • characters
   const maskedValue = value.replace(/./g, '•');
   const displayValue = `${maskedValue.slice(0, cursorPosition)}█${maskedValue.slice(cursorPosition)}`;
 
   return (
-    <Box flexDirection="column" padding={1}>
-      <Box marginBottom={1}>
-        <Text bold color={colors.iris}>
-          Enter your Azure DevOps Personal Access Token:
-        </Text>
+    <Box flexDirection="column">
+      <Box>
+        <Text color={colors.iris}>Paste your Azure DevOps Personal Access Token:</Text>
       </Box>
       <Box
         borderStyle="single"
@@ -61,18 +63,8 @@ export function PatInput({ onSubmit }: PatInputProps): React.JSX.Element {
           {displayValue || '█'}
         </Text>
       </Box>
-      {error ? (
-        <Box marginTop={1}>
-          <Text color={colors.love}>{error}</Text>
-        </Box>
-      ) : (
-        <Box marginTop={1}>
-          <Text color={colors.muted}>PAT will be stored securely in your system keychain</Text>
-        </Box>
-      )}
-      <Box marginTop={1}>
-        <Text color={colors.muted}>Enter: Submit, Ctrl+C: Cancel</Text>
-      </Box>
+      {error ? <Text color={colors.love}>{error}</Text> : <Text color={colors.muted}>Press Enter to continue</Text>}
+      <Footer />
     </Box>
   );
 }

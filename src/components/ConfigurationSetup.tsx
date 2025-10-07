@@ -6,22 +6,18 @@ import type { SetupState } from '../types/index.js';
 import { colors } from '../utils/colors.js';
 import { saveConfigFile, savePatToKeyring } from '../utils/config.js';
 import { ErrorDisplay } from './ErrorDisplay.js';
+import { Header } from './Header.js';
 import { LoadingScreen } from './LoadingScreen.js';
 import { OrganizationInput } from './OrganizationInput.js';
 import { PatInput } from './PatInput.js';
 import { ProjectSelector } from './ProjectSelector.js';
-import { WelcomeMessage } from './WelcomeMessage.js';
 
 type ConfigurationSetupProps = {
   onComplete: () => void;
 };
 
 export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): React.JSX.Element {
-  const [setupState, setSetupState] = useState<SetupState>({ type: 'welcome' });
-
-  function handleContinueFromWelcome() {
-    setSetupState({ type: 'inputPat' });
-  }
+  const [setupState, setSetupState] = useState<SetupState>({ type: 'inputPat' });
 
   function handlePatSubmit(pat: string) {
     setSetupState({ type: 'inputOrg', pat });
@@ -35,8 +31,6 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
     setSetupState({ type: 'validatingPat', pat, org });
 
     try {
-      // CRITICAL: Create service with explicit config (not from getConfig)
-      // This allows us to validate credentials before saving them
       const tempConfig = {
         azureDevOpsPat: pat,
         azureDevOpsOrg: org,
@@ -88,7 +82,6 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
 
       setSetupState({ type: 'setupComplete' });
 
-      // Show success message briefly before completing
       setTimeout(() => {
         onComplete();
       }, 1000);
@@ -101,17 +94,22 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
     }
   }
 
-  // CRITICAL: Render different components based on state
-  if (setupState.type === 'welcome') {
-    return <WelcomeMessage onContinue={handleContinueFromWelcome} />;
-  }
-
   if (setupState.type === 'inputPat') {
-    return <PatInput onSubmit={handlePatSubmit} />;
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header />
+        <PatInput onSubmit={handlePatSubmit} />
+      </Box>
+    );
   }
 
   if (setupState.type === 'inputOrg') {
-    return <OrganizationInput onSubmit={handleOrgSubmit} />;
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header />
+        <OrganizationInput onSubmit={handleOrgSubmit} />
+      </Box>
+    );
   }
 
   if (setupState.type === 'validatingPat') {
@@ -129,7 +127,7 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
   if (setupState.type === 'setupComplete') {
     return (
       <Box padding={1}>
-        <Text color="green">✓ Configuration saved successfully!</Text>
+        <Text color={colors.foam}>✓ Configuration saved successfully!</Text>
       </Box>
     );
   }
@@ -138,11 +136,7 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
     return (
       <Box flexDirection="column" padding={1}>
         <ErrorDisplay error={setupState.error} />
-        {setupState.canRetry && (
-          <Box marginTop={1}>
-            <Text color={colors.muted}>Please try running the setup again with --configure</Text>
-          </Box>
-        )}
+        {setupState.canRetry}
       </Box>
     );
   }

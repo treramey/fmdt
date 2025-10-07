@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { BranchInput } from './components/BranchInput.js';
 import { ConfigurationSetup } from './components/ConfigurationSetup.js';
 import { ErrorDisplay } from './components/ErrorDisplay.js';
+import { Header } from './components/Header.js';
 import { LoadingScreen } from './components/LoadingScreen.js';
 import { MultiRepositoryMergeStatusDisplay } from './components/MultiRepositoryMergeStatusDisplay.js';
 import { AzureDevOpsService } from './services/azure-devops.js';
@@ -145,7 +146,12 @@ export function App({ cliOptions }: AppProps): React.JSX.Element {
   }
 
   if (state.type === 'inputBranch') {
-    return <BranchInput onSubmit={handleBranchSubmit} />;
+    return (
+      <>
+        <Header />
+        <BranchInput onSubmit={handleBranchSubmit} />
+      </>
+    );
   }
 
   if (state.type === 'displayMultiStatus') {

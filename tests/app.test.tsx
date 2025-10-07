@@ -51,8 +51,8 @@ describe('App - Setup Completion', () => {
     // Wait for initial render
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Should show setup screen initially
-    expect(lastFrame()).toContain('Welcome');
+    // Should show setup screen initially (PAT input)
+    expect(lastFrame()).toContain('Paste your Azure DevOps Personal Access Token');
   });
 
   test('should fetch results after setup when --branch flag provided', async () => {
