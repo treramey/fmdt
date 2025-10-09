@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "ignore": ["dist/**", ".git", ".git/**"],
-  "ignoreDependencies": ["es-toolkit", "ts-pattern", "fs-fixture", "lefthook"]
+  "ignoreDependencies": ["es-toolkit", "ts-pattern", "fs-fixture", "lefthook"],
+  "lefthook": false
 }
