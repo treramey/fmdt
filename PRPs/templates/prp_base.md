@@ -101,7 +101,7 @@ const UserSchema = z.object({
 type User = z.infer<typeof UserSchema>;
 ```
 
-### list of tasks to be completed to fullfill the PRP in the order they should be completed
+### list of tasks to be completed to fulfill the PRP in the order they should be completed
 
 ```yaml
 Task 1:
