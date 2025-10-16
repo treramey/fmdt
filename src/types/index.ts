@@ -185,3 +185,20 @@ export type SetupState =
   | { type: 'savingConfig'; pat: string; org: string; project: string }
   | { type: 'setupComplete' }
   | { type: 'setupError'; error: string; canRetry: boolean };
+
+// Update notification types
+/**
+ * Information about an available update
+ */
+export type UpdateInfo = {
+  readonly currentVersion: string;
+  readonly latestVersion: string;
+};
+
+/**
+ * Update check cache structure
+ */
+export type UpdateCache = {
+  readonly lastCheck: number; // Unix timestamp in milliseconds
+  readonly latestVersion: string;
+};

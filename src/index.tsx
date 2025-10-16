@@ -43,4 +43,4 @@ if (options.configure) {
 }
 
 // Render React app
-render(<App cliOptions={options} />);
+render(<App cliOptions={options} version={packageJson.version} />);

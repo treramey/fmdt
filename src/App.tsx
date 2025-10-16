@@ -7,13 +7,16 @@ import { ErrorDisplay } from './components/ErrorDisplay.js';
 import { Header } from './components/Header.js';
 import { LoadingScreen } from './components/LoadingScreen.js';
 import { MultiRepositoryMergeStatusDisplay } from './components/MultiRepositoryMergeStatusDisplay.js';
+import { UpdateNotification } from './components/UpdateNotification.js';
 import { AzureDevOpsService } from './services/azure-devops.js';
-import type { CliOptions, MultiRepositoryResult } from './types/index.js';
+import type { CliOptions, MultiRepositoryResult, UpdateInfo } from './types/index.js';
 import { getConfig, hasValidConfig } from './utils/config.js';
 import { addToHistory, loadHistory, saveHistory } from './utils/history.js';
+import { checkForUpdates } from './utils/update-checker.js';
 
 type AppProps = {
   readonly cliOptions: CliOptions;
+  readonly version: string;
 };
 
 type AppState =
@@ -23,12 +26,24 @@ type AppState =
   | { type: 'inputBranch' }
   | { type: 'needsSetup' };
 
-export function App({ cliOptions }: AppProps): React.JSX.Element {
+export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   const [branch, setBranch] = useState(cliOptions.branch);
   const [state, setState] = useState<AppState>({
     type: 'loading',
     message: 'Initializing...',
   });
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+
+  // Check for updates (non-blocking, runs in parallel with initialization)
+  useEffect(() => {
+    async function checkUpdates(): Promise<void> {
+      const result = await checkForUpdates(version);
+      if (result) {
+        setUpdateInfo(result);
+      }
+    }
+    void checkUpdates();
+  }, [version]);
 
   useEffect(() => {
     async function initialize(): Promise<void> {
@@ -148,6 +163,9 @@ export function App({ cliOptions }: AppProps): React.JSX.Element {
   if (state.type === 'inputBranch') {
     return (
       <>
+        {updateInfo && (
+          <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
+        )}
         <Header />
         <BranchInput onSubmit={handleBranchSubmit} />
       </>
@@ -155,7 +173,14 @@ export function App({ cliOptions }: AppProps): React.JSX.Element {
   }
 
   if (state.type === 'displayMultiStatus') {
-    return <MultiRepositoryMergeStatusDisplay {...state.result} onNewSearch={handleNewSearch} />;
+    return (
+      <>
+        {updateInfo && (
+          <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
+        )}
+        <MultiRepositoryMergeStatusDisplay {...state.result} onNewSearch={handleNewSearch} />
+      </>
+    );
   }
 
   return <Text>Unknown state</Text>;
