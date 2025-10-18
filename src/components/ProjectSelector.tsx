@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import type React from 'react';
 import { useState } from 'react';
+import { useSimpleVirtualScroll } from '../hooks/useSimpleVirtualScroll.js';
 import type { Project } from '../types/index.js';
 import { colors } from '../utils/colors.js';
 
@@ -11,10 +12,18 @@ type ProjectSelectorProps = {
 
 export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): React.JSX.Element {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [scrollOffset, setScrollOffset] = useState(0);
 
-  const visibleCount = 10;
-  const maxScroll = Math.max(0, projects.length - visibleCount);
+  const {
+    visibleItems: visibleProjects,
+    scrollOffset,
+    viewportHeight,
+    hasTopIndicator,
+    hasBottomIndicator,
+  } = useSimpleVirtualScroll({
+    items: projects,
+    selectedIndex,
+    reservedLines: 6, // Header + instructions + footer + padding
+  });
 
   useInput((_input, key) => {
     if (key.return) {
@@ -26,29 +35,15 @@ export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): R
     }
 
     if (key.upArrow) {
-      setSelectedIndex((prev) => {
-        const newIndex = Math.max(0, prev - 1);
-        if (newIndex < scrollOffset) {
-          setScrollOffset(newIndex);
-        }
-        return newIndex;
-      });
+      setSelectedIndex((prev) => Math.max(0, prev - 1));
       return;
     }
 
     if (key.downArrow) {
-      setSelectedIndex((prev) => {
-        const newIndex = Math.min(projects.length - 1, prev + 1);
-        if (newIndex >= scrollOffset + visibleCount) {
-          setScrollOffset(Math.min(maxScroll, newIndex - visibleCount + 1));
-        }
-        return newIndex;
-      });
+      setSelectedIndex((prev) => Math.min(projects.length - 1, prev + 1));
       return;
     }
   });
-
-  const visibleProjects = projects.slice(scrollOffset, scrollOffset + visibleCount);
 
   return (
     <Box flexDirection="column" padding={1}>
@@ -60,6 +55,11 @@ export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): R
       <Box marginBottom={1}>
         <Text color={colors.muted}>Found {projects.length} projects (use ↑↓ to navigate, Enter to select)</Text>
       </Box>
+      {hasTopIndicator && (
+        <Box justifyContent="center">
+          <Text color={colors.muted}>↑ More above</Text>
+        </Box>
+      )}
       <Box flexDirection="column">
         {visibleProjects.map((project, index) => {
           const absoluteIndex = scrollOffset + index;
@@ -74,10 +74,15 @@ export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): R
           );
         })}
       </Box>
-      {projects.length > visibleCount && (
+      {hasBottomIndicator && (
+        <Box justifyContent="center">
+          <Text color={colors.muted}>↓ More below</Text>
+        </Box>
+      )}
+      {projects.length > viewportHeight && (
         <Box marginTop={1}>
           <Text dimColor>
-            Showing {scrollOffset + 1}-{Math.min(scrollOffset + visibleCount, projects.length)} of {projects.length}
+            Showing {scrollOffset + 1}-{Math.min(scrollOffset + viewportHeight, projects.length)} of {projects.length}
           </Text>
         </Box>
       )}
