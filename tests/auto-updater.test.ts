@@ -131,7 +131,7 @@ describe('executeUpgrade', () => {
     );
   });
 
-  it('should execute bun install command for bun', async () => {
+  it('should execute bun add command for bun', async () => {
     const mockStderr = new ReadableStream({
       start(controller) {
         controller.close();
@@ -148,7 +148,7 @@ describe('executeUpgrade', () => {
     expect(result.success).toBe(true);
     expect(mockSpawn).toHaveBeenCalledWith(
       expect.objectContaining({
-        cmd: ['bun', 'install', '-g', 'fmdt@1.0.0'],
+        cmd: ['bun', 'add', '-g', 'fmdt@1.0.0'],
       }),
     );
   });

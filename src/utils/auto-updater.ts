@@ -104,7 +104,7 @@ export async function executeUpgrade(
         case 'npm':
           return ['npm', 'install', '-g', `fmdt@${targetVersion}`];
         case 'bun':
-          return ['bun', 'install', '-g', `fmdt@${targetVersion}`];
+          return ['bun', 'add', '-g', `fmdt@${targetVersion}`];
         case 'pnpm':
           return ['pnpm', 'add', '-g', `fmdt@${targetVersion}`];
         case 'yarn':
