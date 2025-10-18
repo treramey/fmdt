@@ -24,7 +24,7 @@ export function MultiRepositoryMergeStatusDisplay({
     return (
       <Box flexDirection="column" padding={1}>
         <Text color={colors.gold}>Branch not found in any of {operationSummary.total} repositories</Text>
-        <Footer />
+        <Footer showSearch />
       </Box>
     );
   }

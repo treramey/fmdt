@@ -50,8 +50,9 @@ async function saveUpdateCache(cache: UpdateCache): Promise<void> {
 
 /**
  * Fetch the latest version from npm registry
+ * Exported for use by auto-updater
  */
-async function fetchLatestVersion(): Promise<string | null> {
+export async function fetchLatestVersion(): Promise<string | null> {
   try {
     // Set a reasonable timeout (5 seconds)
     const controller = new AbortController();
