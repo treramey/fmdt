@@ -120,6 +120,7 @@ describe('config file operations', () => {
         azureDevOpsOrg: 'test-org',
         azureDevOpsProject: 'test-project',
         version: '1.0.0',
+        autoUpdate: true,
       };
 
       await saveConfigFile(config);
@@ -235,6 +236,7 @@ describe('config file operations', () => {
         azureDevOpsPat: 'test-pat-123',
         azureDevOpsOrg: 'test-org',
         azureDevOpsProject: 'test-project',
+        autoUpdate: true,
       });
     });
   });

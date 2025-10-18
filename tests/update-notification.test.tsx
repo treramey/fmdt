@@ -9,13 +9,13 @@ describe('UpdateNotification', () => {
     const output = lastFrame();
     expect(output).toContain('1.0.0');
     expect(output).toContain('1.2.0');
-    expect(output).toContain('Update available');
+    expect(output).toContain('A new version is available');
   });
 
-  it('should display update command', () => {
+  it('should display auto-update message', () => {
     const { lastFrame } = render(<UpdateNotification currentVersion="1.0.0" latestVersion="1.2.0" />);
 
     const output = lastFrame();
-    expect(output).toContain('npm install -g fmdt@latest');
+    expect(output).toContain('Updating automatically in the background');
   });
 });

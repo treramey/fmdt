@@ -78,6 +78,7 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
         azureDevOpsOrg: org,
         azureDevOpsProject: projectName,
         version: '1.0.0',
+        autoUpdate: true, // Default to enabled
       });
 
       setSetupState({ type: 'setupComplete' });

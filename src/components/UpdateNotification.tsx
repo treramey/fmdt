@@ -1,5 +1,5 @@
 import { Alert } from '@inkjs/ui';
-import { Box, Text } from 'ink';
+import { Box } from 'ink';
 import type React from 'react';
 
 type UpdateNotificationProps = {
@@ -11,9 +11,8 @@ export function UpdateNotification({ currentVersion, latestVersion }: UpdateNoti
   return (
     <Box flexDirection="column" paddingBottom={1}>
       <Alert variant="info">
-        Update available: {currentVersion} → {latestVersion}
+        A new version is available ({currentVersion} → {latestVersion}). Updating automatically in the background...
       </Alert>
-      <Text dimColor>Run: npm install -g fmdt@latest (or bun install -g fmdt@latest)</Text>
     </Box>
   );
 }

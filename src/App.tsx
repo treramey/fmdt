@@ -10,6 +10,7 @@ import { MultiRepositoryMergeStatusDisplay } from './components/MultiRepositoryM
 import { UpdateNotification } from './components/UpdateNotification.js';
 import { AzureDevOpsService } from './services/azure-devops.js';
 import type { CliOptions, MultiRepositoryResult, UpdateInfo } from './types/index.js';
+import { performAutoUpdate } from './utils/auto-updater.js';
 import { getConfig, hasValidConfig } from './utils/config.js';
 import { addToHistory, loadHistory, saveHistory } from './utils/history.js';
 import { checkForUpdates } from './utils/update-checker.js';
@@ -34,15 +35,33 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   });
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
-  // Check for updates (non-blocking, runs in parallel with initialization)
   useEffect(() => {
-    async function checkUpdates(): Promise<void> {
-      const result = await checkForUpdates(version);
-      if (result) {
-        setUpdateInfo(result);
+    async function handleUpdates(): Promise<void> {
+      try {
+        const updateCheck = await checkForUpdates(version);
+        if (updateCheck) {
+          setUpdateInfo(updateCheck);
+        }
+
+        const config = await getConfig().catch(() => null);
+
+        if (config?.autoUpdate === false) {
+          return;
+        }
+
+        const result = await performAutoUpdate(version);
+
+        if (result.attempted && result.success) {
+          console.log('Auto-update successful:', result.version);
+        } else if (result.attempted && !result.success) {
+          console.error('Auto-update failed:', result.error);
+        }
+      } catch (error) {
+        console.error('Update error:', error);
       }
     }
-    void checkUpdates();
+
+    void handleUpdates();
   }, [version]);
 
   useEffect(() => {
@@ -121,12 +140,10 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   }
 
   async function handleSetupComplete(): Promise<void> {
-    // After setup completes, transition to next state
     try {
       const config = await getConfig();
 
       if (cliOptions.branch) {
-        // User provided --branch flag, fetch results
         setBranch(cliOptions.branch);
         setState({
           type: 'loading',
@@ -137,7 +154,6 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
         const result = await service.getBatchBranchMergeStatus(cliOptions.branch);
         setState({ type: 'displayMultiStatus', result });
       } else {
-        // No branch provided, prompt user for input
         setState({ type: 'inputBranch' });
       }
     } catch (error) {
