@@ -153,7 +153,7 @@ describe('executeUpgrade', () => {
     );
   });
 
-  it('should execute pnpm install command for pnpm', async () => {
+  it('should execute pnpm add command for pnpm', async () => {
     const mockStderr = new ReadableStream({
       start(controller) {
         controller.close();
@@ -170,7 +170,7 @@ describe('executeUpgrade', () => {
     expect(result.success).toBe(true);
     expect(mockSpawn).toHaveBeenCalledWith(
       expect.objectContaining({
-        cmd: ['pnpm', 'install', '-g', 'fmdt@1.0.0'],
+        cmd: ['pnpm', 'add', '-g', 'fmdt@1.0.0'],
       }),
     );
   });
