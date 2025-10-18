@@ -77,7 +77,7 @@ For frequent use, install globally:
 npm install -g fmdt
 
 # Bun
-bun install -g fmdt
+bun add -g fmdt
 
 # pnpm
 pnpm add -g fmdt
@@ -291,7 +291,7 @@ fmdt/
 │   │   ├── MergeStatusDisplay.tsx
 │   │   ├── LoadingScreen.tsx
 │   │   ├── ErrorDisplay.tsx
-│   │   └── RepositorySelector.tsx
+│   │   └── ProjectSelector.tsx
 │   ├── types/             # TypeScript type definitions
 │   │   └── index.ts
 │   ├── utils/             # Utility functions

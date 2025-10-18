@@ -34,9 +34,30 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
     message: 'Initializing...',
   });
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function checkAutoUpdateEnabled(): Promise<void> {
+      // Check environment variables and config
+      if (process.env.NO_UPDATE_NOTIFIER === '1' || process.env.FMDT_DISABLE_AUTO_UPDATE === '1') {
+        setAutoUpdateEnabled(false);
+        return;
+      }
+
+      const config = await getConfig().catch(() => null);
+      setAutoUpdateEnabled(config?.autoUpdate !== false);
+    }
+
+    void checkAutoUpdateEnabled();
+  }, []);
 
   useEffect(() => {
     async function handleUpdates(): Promise<void> {
+      // Early return if auto-update is disabled
+      if (!autoUpdateEnabled) {
+        return;
+      }
+
       try {
         const updateCheck = await checkForUpdates(version);
         if (updateCheck) {
@@ -62,7 +83,7 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
     }
 
     void handleUpdates();
-  }, [version]);
+  }, [version, autoUpdateEnabled]);
 
   useEffect(() => {
     async function initialize(): Promise<void> {
@@ -179,7 +200,7 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   if (state.type === 'inputBranch') {
     return (
       <>
-        {updateInfo && (
+        {autoUpdateEnabled && updateInfo && (
           <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
         )}
         <Header />
@@ -191,7 +212,7 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   if (state.type === 'displayMultiStatus') {
     return (
       <>
-        {updateInfo && (
+        {autoUpdateEnabled && updateInfo && (
           <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
         )}
         <MultiRepositoryMergeStatusDisplay {...state.result} onNewSearch={handleNewSearch} />
