@@ -53,30 +53,13 @@
 
 ## Installation
 
-### Quick Start (Recommended)
-
-No installation required! Run directly with:
-
-```bash
-# Using Bun (fastest)
-bunx fmdt@latest
-
-# Using npm
-npx fmdt@latest
-
-# Using pnpm
-pnpm dlx fmdt@latest
-```
-
-### Global Installation
-
-For frequent use, install globally:
+Install globally:
 
 ```bash
 # npm
 npm install -g fmdt
 
-# Bun
+# Bun (fastest)
 bun add -g fmdt
 
 # pnpm
