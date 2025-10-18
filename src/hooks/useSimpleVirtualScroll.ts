@@ -6,27 +6,57 @@ const MIN_VIEWPORT_HEIGHT = 5;
 const MAX_VIEWPORT_HEIGHT = 20;
 const DEFAULT_TERMINAL_ROWS = 24;
 
+/**
+ * Options for the useSimpleVirtualScroll hook.
+ */
 type UseSimpleVirtualScrollOptions<T> = {
+  /** The complete list of items to virtualize */
   items: T[];
+  /** The currently selected item index */
   selectedIndex: number;
+  /** Number of lines reserved for UI elements (header, footer, etc.) */
   reservedLines: number;
+  /** Optional fixed viewport height for testing */
   testViewportHeight?: number;
 };
 
+/**
+ * Return value from the useSimpleVirtualScroll hook.
+ */
 type UseSimpleVirtualScrollReturn<T> = {
+  /** Current scroll offset in number of items */
   scrollOffset: number;
+  /** Height of the viewport in lines */
   viewportHeight: number;
+  /** Index of the first visible item */
   viewStart: number;
+  /** Index of the last visible item (exclusive) */
   viewEnd: number;
+  /** Array of items currently in the viewport */
   visibleItems: T[];
+  /** Whether to show "↑ More above" indicator */
   hasTopIndicator: boolean;
+  /** Whether to show "↓ More below" indicator */
   hasBottomIndicator: boolean;
+  /** Total number of items in the list */
   totalLines: number;
 };
 
 /**
- * A simplified virtual scroll hook for flat lists (non-hierarchical)
- * Automatically scrolls to keep the selected item in view
+ * Virtual scrolling hook for flat, non-hierarchical lists.
+ *
+ * Efficiently renders large lists by only displaying items within the terminal viewport.
+ * Automatically scrolls to keep the selected item visible and provides scroll indicators.
+ *
+ * @template T - The type of items in the list
+ * @param options - Configuration options for virtual scrolling
+ * @returns Scroll state and visible items for rendering
+ * @example
+ * const { visibleItems, hasTopIndicator, hasBottomIndicator } = useSimpleVirtualScroll({
+ *   items: allProjects,
+ *   selectedIndex: currentIndex,
+ *   reservedLines: 6, // Header + footer lines
+ * });
  */
 export function useSimpleVirtualScroll<T>({
   items,

@@ -5,11 +5,31 @@ import { useSimpleVirtualScroll } from '../hooks/useSimpleVirtualScroll.js';
 import type { Project } from '../types/index.js';
 import { colors } from '../utils/colors.js';
 
+/**
+ * Props for the ProjectSelector component.
+ */
 type ProjectSelectorProps = {
+  /** List of Azure DevOps projects to display */
   projects: Project[];
+  /** Callback invoked when user selects a project */
   onSelect: (projectName: string) => void;
 };
 
+/**
+ * Interactive project selector with keyboard navigation and virtual scrolling.
+ *
+ * Displays a list of Azure DevOps projects with arrow key navigation and Enter
+ * to select. Uses virtual scrolling to efficiently handle large project lists.
+ * Shows scroll indicators when there are more items above or below the viewport.
+ *
+ * @param props - Component props containing projects and selection callback
+ * @returns Virtualized, keyboard-navigable project list
+ * @example
+ * <ProjectSelector
+ *   projects={allProjects}
+ *   onSelect={(name) => console.log(`Selected: ${name}`)}
+ * />
+ */
 export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): React.JSX.Element {
   const [selectedIndex, setSelectedIndex] = useState(0);
 

@@ -8,27 +8,66 @@ const MIN_VIEWPORT_HEIGHT = 5;
 const MAX_VIEWPORT_HEIGHT = 20;
 const DEFAULT_TERMINAL_ROWS = 24;
 
+/**
+ * Options for the useVirtualScroll hook.
+ */
 type UseVirtualScrollOptions = {
+  /** Flattened array of group and file items */
   items: FlatItem[];
+  /** Index of the currently selected group */
   currentGroupIndex: number;
+  /** Index of the currently selected file within its group */
   currentFileIndex: number;
+  /** Whether a group header is selected (vs a file) */
   isGroupSelected: boolean;
+  /** Number of lines reserved for UI elements */
   reservedLines: number;
+  /** Optional fixed viewport height for testing */
   testViewportHeight?: number;
 };
 
+/**
+ * Return value from the useVirtualScroll hook.
+ */
 type UseVirtualScrollReturn = {
+  /** Current scroll offset in number of items */
   scrollOffset: number;
+  /** Height of the viewport in lines */
   viewportHeight: number;
+  /** Index of the first visible item */
   viewStart: number;
+  /** Index of the last visible item (exclusive) */
   viewEnd: number;
+  /** Array of items currently in the viewport */
   visibleItems: FlatItem[];
+  /** Whether to show "↑ More above" indicator */
   hasTopIndicator: boolean;
+  /** Whether to show "↓ More below" indicator */
   hasBottomIndicator: boolean;
+  /** Total number of items in the list */
   totalLines: number;
+  /** Function to calculate adjusted scroll offset based on selection */
   getAdjustedScrollOffset: (currentScrollOffset: number) => number;
 };
 
+/**
+ * Virtual scrolling hook for hierarchical lists with groups and files.
+ *
+ * Handles more complex scenarios than useSimpleVirtualScroll, supporting nested
+ * items like file groups. Tracks both group and file selection states to properly
+ * position the viewport.
+ *
+ * @param options - Configuration options including hierarchical selection state
+ * @returns Scroll state and visible items for rendering grouped lists
+ * @example
+ * const { visibleItems, hasTopIndicator } = useVirtualScroll({
+ *   items: flattenedItems,
+ *   currentGroupIndex: 0,
+ *   currentFileIndex: 2,
+ *   isGroupSelected: false,
+ *   reservedLines: 8,
+ * });
+ */
 export function useVirtualScroll({
   items,
   currentGroupIndex,

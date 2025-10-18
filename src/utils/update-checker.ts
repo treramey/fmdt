@@ -9,14 +9,18 @@ const DEFAULT_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const NPM_REGISTRY_URL = 'https://registry.npmjs.org/fmdt/latest';
 
 /**
- * Get the path to the update cache file
+ * Gets the absolute path to the update cache file.
+ *
+ * @returns The full path to update-cache.json in the config directory
  */
 function getUpdateCachePath(): string {
   return join(getConfigDir(), UPDATE_CACHE_FILE);
 }
 
 /**
- * Load the update cache from disk
+ * Loads the update cache from disk.
+ *
+ * @returns The cached update information or null if not found/invalid
  */
 async function loadUpdateCache(): Promise<UpdateCache | null> {
   try {
@@ -31,7 +35,12 @@ async function loadUpdateCache(): Promise<UpdateCache | null> {
 }
 
 /**
- * Save the update cache to disk
+ * Saves the update cache to disk.
+ *
+ * Creates the config directory if it doesn't exist. Silently fails on errors
+ * to prevent cache issues from breaking the application.
+ *
+ * @param cache - The update cache data to save
  */
 async function saveUpdateCache(cache: UpdateCache): Promise<void> {
   try {
@@ -49,8 +58,17 @@ async function saveUpdateCache(cache: UpdateCache): Promise<void> {
 }
 
 /**
- * Fetch the latest version from npm registry
- * Exported for use by auto-updater
+ * Fetches the latest version of fmdt from the npm registry.
+ *
+ * Makes a request to the npm registry with a 5-second timeout.
+ * Returns null on network errors, timeouts, or parse failures to fail gracefully.
+ *
+ * @returns The latest version string (e.g., "1.2.3") or null if fetch fails
+ * @example
+ * const latest = await fetchLatestVersion();
+ * if (latest) {
+ *   console.log(`Latest version: ${latest}`);
+ * }
  */
 export async function fetchLatestVersion(): Promise<string | null> {
   try {
@@ -78,10 +96,20 @@ export async function fetchLatestVersion(): Promise<string | null> {
 }
 
 /**
- * Check for available updates
- * @param currentVersion - Current version of the CLI
- * @param checkInterval - Time in ms before checking again (default: 24h)
- * @returns UpdateInfo if newer version available, null otherwise
+ * Checks for available updates to fmdt.
+ *
+ * Uses a disk cache to avoid excessive registry requests. Only checks for updates
+ * if the cache is older than the specified interval (default: 24 hours).
+ * Respects NO_UPDATE_NOTIFIER=1 environment variable to disable checks.
+ *
+ * @param currentVersion - The currently installed version (e.g., "1.0.0")
+ * @param checkInterval - Milliseconds before checking again (default: 24 hours)
+ * @returns UpdateInfo object if newer version is available, null otherwise
+ * @example
+ * const updateInfo = await checkForUpdates('1.0.0');
+ * if (updateInfo) {
+ *   console.log(`Update available: ${updateInfo.latestVersion}`);
+ * }
  */
 export async function checkForUpdates(
   currentVersion: string,

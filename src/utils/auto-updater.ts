@@ -2,6 +2,21 @@ import type { AutoUpdateResult, PackageManager } from '../types/index.js';
 import { fetchLatestVersion } from './update-checker.js';
 import { isNewerVersion } from './version-compare.js';
 
+/**
+ * Detects which package manager was used to install fmdt globally.
+ *
+ * Tries to detect the package manager by:
+ * 1. Checking process.execPath to prioritize the runtime (bun vs node)
+ * 2. Running package manager list commands to see which has fmdt installed
+ * 3. Returns 'unknown' if detection fails
+ *
+ * @returns The detected package manager or 'unknown' if detection fails
+ * @example
+ * const pm = await detectPackageManager();
+ * if (pm !== 'unknown') {
+ *   console.log(`Detected ${pm}`);
+ * }
+ */
 export async function detectPackageManager(): Promise<PackageManager> {
   try {
     const execPath = process.execPath.toLowerCase();
@@ -58,10 +73,21 @@ export async function detectPackageManager(): Promise<PackageManager> {
 }
 
 /**
- * Execute the upgrade command for the given package manager
+ * Executes the upgrade command for the given package manager.
  *
- * Pattern: Based on opencode's upgrade execution
- * Critical: Must catch ALL errors - don't throw
+ * Runs the appropriate global install command based on the detected package manager.
+ * Handles npm, bun, pnpm, and yarn with their respective syntaxes.
+ *
+ * @param method - The package manager to use for the upgrade
+ * @param targetVersion - The version to upgrade to (e.g., "1.2.3")
+ * @returns Object indicating success/failure and optional error message
+ * @example
+ * const result = await executeUpgrade('npm', '1.2.3');
+ * if (result.success) {
+ *   console.log('Upgrade successful');
+ * } else {
+ *   console.error('Upgrade failed:', result.error);
+ * }
  */
 export async function executeUpgrade(
   method: PackageManager,
@@ -113,11 +139,25 @@ export async function executeUpgrade(
 }
 
 /**
- * Main auto-update function
- * Call this from App.tsx in a background useEffect
+ * Performs automatic self-update of the fmdt package.
  *
- * Pattern: Combines detection + execution with graceful error handling
- * Critical: Must NEVER throw errors - always catch and return result
+ * This is the main auto-update orchestrator that:
+ * 1. Checks environment variables for opt-out (NO_UPDATE_NOTIFIER, FMDT_DISABLE_AUTO_UPDATE)
+ * 2. Fetches the latest version from npm registry
+ * 3. Compares versions to determine if update is needed
+ * 4. Detects the package manager used for installation
+ * 5. Executes the upgrade command if appropriate
+ *
+ * This function is designed to run in the background without blocking app startup.
+ * It never throws errors and always returns a result object.
+ *
+ * @param currentVersion - The currently installed version (e.g., "1.0.0")
+ * @returns Result object with attempt status, success flag, method used, and any errors
+ * @example
+ * const result = await performAutoUpdate('1.0.0');
+ * if (result.attempted && result.success) {
+ *   console.log(`Updated to ${result.version} using ${result.method}`);
+ * }
  */
 export async function performAutoUpdate(currentVersion: string): Promise<AutoUpdateResult> {
   try {
