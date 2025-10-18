@@ -11,7 +11,6 @@ const CONFIG_DIR_NAME = 'fmdt';
 const CONFIG_FILE_NAME = 'config.json';
 
 export function getConfigDir(): string {
-  // CRITICAL: Use @folder/xdg for cross-platform support
   // macOS: ~/Library/Application Support/fmdt
   // Linux: ~/.config/fmdt
   // Windows: %APPDATA%/fmdt
@@ -29,10 +28,8 @@ export async function loadConfigFile(): Promise<ConfigFile | null> {
     const fileContent = await readFile(configPath, 'utf-8');
     const parsed = JSON.parse(fileContent);
 
-    // CRITICAL: Validate with Zod schema to ensure type safety
     return ConfigFileSchema.parse(parsed);
   } catch (_error) {
-    // File doesn't exist or is invalid
     return null;
   }
 }
@@ -41,10 +38,7 @@ export async function saveConfigFile(config: ConfigFile): Promise<void> {
   const configDir = getConfigDir();
   const configPath = getConfigFilePath();
 
-  // CRITICAL: Create directory recursively if it doesn't exist
   await mkdir(configDir, { recursive: true });
-
-  // Pretty-print JSON for readability
   await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
 }
 
@@ -54,8 +48,6 @@ export async function loadPatFromKeyring(): Promise<string | null> {
     const password = entry.getPassword();
     return password;
   } catch (_error) {
-    // CRITICAL: Keyring may not be available (Linux without gnome-keyring)
-    // Return null instead of throwing to allow graceful fallback
     return null;
   }
 }
@@ -65,7 +57,6 @@ export async function savePatToKeyring(pat: string): Promise<void> {
     const entry = new Entry(KEYRING_SERVICE, KEYRING_ACCOUNT);
     entry.setPassword(pat);
   } catch (_error) {
-    // CRITICAL: Provide helpful error message for keyring unavailable
     throw new Error(
       'Unable to save PAT to system keyring. ' +
         'Please ensure your system keyring service is available. ' +
@@ -78,9 +69,7 @@ export async function deletePatFromKeyring(): Promise<void> {
   try {
     const entry = new Entry(KEYRING_SERVICE, KEYRING_ACCOUNT);
     entry.deletePassword();
-  } catch (_error) {
-    // CATCH errors silently (already deleted is OK)
-  }
+  } catch (_error) {}
 }
 
 export async function getConfig(): Promise<RuntimeConfig> {
@@ -101,6 +90,7 @@ export async function getConfig(): Promise<RuntimeConfig> {
     azureDevOpsPat: pat,
     azureDevOpsOrg: configFile.azureDevOpsOrg,
     azureDevOpsProject: configFile.azureDevOpsProject,
+    autoUpdate: configFile.autoUpdate,
   };
 }
 

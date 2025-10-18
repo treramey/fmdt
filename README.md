@@ -1,31 +1,99 @@
 # fmdt (Feature Merge Detection Tool)
 
-A CLI tool for checking if a branch has been merged into feature branches (dev, qa, staging, master) in Azure DevOps.
+<div align="center">
+  <!-- <img src="assets/icon.svg" alt="fmdt Icon" width="128" height="128"> -->
+  <!-- <br><br> -->
+  <strong>Interactive CLI tool for checking branch merge status across Azure DevOps repositories</strong>
+  <br><br>
+  <a href="https://www.npmjs.com/package/fmdt">
+    <img src="https://img.shields.io/npm/v/fmdt.svg" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/fmdt">
+    <img src="https://img.shields.io/npm/dm/fmdt.svg" alt="npm downloads">
+  </a>
+  <a href="https://github.com/treramey/fmdt/blob/main/LICENSE">
+    <img src="https://img.shields.io/npm/l/fmdt.svg" alt="license">
+  </a>
+  <a href="https://github.com/treramey/fmdt">
+    <img src="https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg" alt="node version">
+  </a>
+</div>
+
+## Overview
+
+**fmdt** (Feature Merge Detection Tool) is a React Ink-based CLI tool that provides an interactive terminal interface for tracking branch merge status across Azure DevOps repositories. Quickly discover which feature branches (dev, qa, staging, master) your code has been merged into, across all repositories in your organization.
 
 ## Features
 
-- 🔍 Automatically scan all repositories for a branch across your organization
-- 🎨 Beautiful terminal UI powered by React Ink
-- ⚡ Fast parallel scanning using Azure DevOps API
-- 📊 Clear visual display of merge history with dates and authors
-- 🚀 Display results only for repositories containing the branch
-- 🛠️ TypeScript for type safety
-- ✅ Comprehensive test coverage
+- 🔍 **Organization-Wide Scanning** - Automatically scan all repositories for a branch across your organization
+- 🎨 **Beautiful Terminal UI** - Powered by React Ink v6 with clear, color-coded status display
+- ⚡ **Fast Parallel Scanning** - Concurrent API requests for maximum performance
+- 📊 **Rich Merge History** - View merge dates, authors, and status at a glance
+- 🚀 **Smart Filtering** - Display results only for repositories containing the branch
+- 🔐 **Secure Credentials** - PAT tokens stored safely in system keychain
+- 🛠️ **Type Safety** - Full TypeScript implementation with strict type checking
+- ✅ **Comprehensive Testing** - Full test coverage with vitest
+
+<!-- ## Screenshots
+
+<div align="center">
+  <img src="assets/thumbnail.png" alt="fmdt Thumbnail" width="600">
+  <br><br>
+  <img src="assets/screenshot_scan.png" alt="fmdt Branch Scan" width="800">
+  <br><br>
+  <img src="assets/screenshot_results.png" alt="fmdt Results Display" width="800">
+</div> -->
 
 ## Prerequisites
 
-- Node.js ≥ 20.19.3
-- Bun (recommended) or npm/pnpm
-- Azure DevOps Personal Access Token (PAT)
-- Azure DevOps organization and project access
+- **Node.js** ≥ 20.19.3
+- **Bun** (recommended) or npm/pnpm
+- **Azure DevOps Personal Access Token** (PAT) with Code (Read) and Project and Team (Read) scopes
+- **Azure DevOps** organization and project access
 
 ## Installation
+
+### Quick Start (Recommended)
+
+No installation required! Run directly with:
+
+```bash
+# Using Bun (fastest)
+bunx fmdt@latest
+
+# Using npm
+npx fmdt@latest
+
+# Using pnpm
+pnpm dlx fmdt@latest
+```
+
+### Global Installation
+
+For frequent use, install globally:
+
+```bash
+# npm
+npm install -g fmdt
+
+# Bun
+bun add -g fmdt
+
+# pnpm
+pnpm add -g fmdt
+```
+
+Then run from anywhere:
+
+```bash
+fmdt --branch feature-123
+```
 
 ### From Source
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/treramey/fmdt.git
 cd fmdt
 
 # Install dependencies
@@ -87,36 +155,60 @@ This will delete your existing configuration and run the setup wizard again.
 
 ## Usage
 
-### Basic Usage
+### Interactive Mode (Default)
 
 ```bash
-# First run - interactive setup wizard
-fmdt
+fmdt                           # Launch with interactive setup/branch input
+fmdt --branch feature-123      # Direct branch scan
+fmdt -b feature-123            # Short flag version
+```
 
-# Scan all repositories for a branch
+### Command Line Options
+
+```bash
+fmdt --help                    # Show help information
+fmdt --version                 # Show version number
+fmdt --branch <name>           # Scan for specific branch
+fmdt --configure               # Reconfigure credentials
+```
+
+### Examples
+
+```bash
+# First-time use - interactive setup wizard
+bunx fmdt@latest
+
+# Scan for a specific branch
+bunx fmdt@latest --branch feature-123
+
+# Interactive branch input (after setup)
+bunx fmdt@latest
+
+# Reconfigure Azure DevOps credentials
+bunx fmdt@latest --configure
+
+# Using alias (after global install)
 fmdt --branch feature-123
-
-# Using short flags
 fmdt -b feature-123
+```
 
-# Reconfigure credentials
-fmdt --configure
+### Common Use Cases
 
-# Interactive mode - will prompt for branch name (if already configured)
-fmdt
+```bash
+# Check merge status before release
+fmdt --branch feature-new-auth
+
+# Verify hotfix deployment
+fmdt --branch hotfix-critical-bug
+
+# Track feature across multiple repos
+fmdt --branch feature-shared-component
+
+# Quick status check with global install
+fmdt -b my-feature
 ```
 
 **Note**: The tool automatically scans all accessible repositories in your Azure DevOps organization and displays results only for repositories where the branch exists.
-
-### Development Mode
-
-```bash
-# Run in development mode with hot reload
-bun run dev -- --branch feature-123
-
-# Or directly with bun
-bun run start -- --branch feature-123
-```
 
 ## Output
 
@@ -199,7 +291,7 @@ fmdt/
 │   │   ├── MergeStatusDisplay.tsx
 │   │   ├── LoadingScreen.tsx
 │   │   ├── ErrorDisplay.tsx
-│   │   └── RepositorySelector.tsx
+│   │   └── ProjectSelector.tsx
 │   ├── types/             # TypeScript type definitions
 │   │   └── index.ts
 │   ├── utils/             # Utility functions
@@ -217,9 +309,16 @@ fmdt/
 
 ## Development
 
-### Available Scripts
+For development setup and contribution guidelines:
+
+### Quick Start
 
 ```bash
+# Clone and setup
+git clone https://github.com/treramey/fmdt.git
+cd fmdt
+bun install
+
 # Development
 bun run start              # Run CLI in development mode
 bun run dev                # Run with watch mode
@@ -239,36 +338,6 @@ bun run knip               # Check unused dependencies
 bun run ci                 # Run all quality checks
 ```
 
-### Running Tests
-
-```bash
-# Run tests once
-bun run test
-
-# Run tests in watch mode
-bun run test:watch
-
-# Run specific test file
-CI=true vitest run tests/formatters.test.ts
-```
-
-### Code Quality
-
-This project uses:
-
-- **TypeScript** with ultra-strict configuration
-- **Biome** for linting and formatting
-- **vitest** for testing
-- **knip** for unused dependency detection
-
-Before committing, ensure all checks pass:
-
-```bash
-bun run ci
-```
-
-## Architecture
-
 ### Technology Stack
 
 - **Runtime**: Bun + Node.js (ESM only)
@@ -277,14 +346,22 @@ bun run ci
 - **Testing**: vitest
 - **Linting**: Biome v2
 - **Validation**: Zod
+- **State Management**: React hooks
 
-### Key Design Patterns
+### Code Quality Standards
 
-- **Service Layer**: Azure DevOps API integration abstracted into service class
-- **Component-Based UI**: React Ink components for modular, testable UI
-- **Type Safety**: Strict TypeScript configuration with Zod runtime validation
-- **State Management**: React hooks for UI state
-- **Functional Programming**: Utility functions for data transformation
+This project maintains strict quality standards:
+
+- **TypeScript** with ultra-strict configuration (no `any`, no type assertions)
+- **Biome** for consistent linting and formatting
+- **vitest** for comprehensive test coverage
+- **knip** for dependency management
+
+Before committing, ensure all checks pass:
+
+```bash
+bun run ci
+```
 
 ## Troubleshooting
 
@@ -328,24 +405,26 @@ bun run ci
 
 ## Contributing
 
+Contributions are welcome! Please follow these steps:
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
+3. Make your changes following the code quality standards
 4. Run tests and quality checks (`bun run ci`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Commit your changes with clear, descriptive messages
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
 ## License
 
-MIT
+MIT License - see [LICENSE](./LICENSE) file for details
 
 ## Author
 
-TRamey
+**treramey** - [trevor@trevors.email](mailto:trevor@trevors.email)
 
 ## Acknowledgments
 
-- Built with [React Ink](https://github.com/vadimdemedes/ink)
+- Built with [React Ink](https://github.com/vadimdemedes/ink) for beautiful terminal UIs
 - Inspired by [ccexp](https://github.com/nyatinte/ccexp) for TUI best practices
-- Business logic derived from LAAIRDevOps Azure DevOps integration patterns
+- Secure credential storage powered by [@napi-rs/keyring](https://github.com/napi-rs/node-rs/tree/main/packages/keyring)

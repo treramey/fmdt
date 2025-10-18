@@ -165,6 +165,7 @@ export const ConfigFileSchema = z.object({
   azureDevOpsOrg: z.string().min(1),
   azureDevOpsProject: z.string().min(1),
   version: z.string().default('1.0.0'), // For future migrations
+  autoUpdate: z.boolean().optional().default(true), // Auto-update functionality (opt-out)
 });
 
 export type ConfigFile = z.infer<typeof ConfigFileSchema>;
@@ -174,6 +175,7 @@ export type RuntimeConfig = {
   azureDevOpsPat: string;
   azureDevOpsOrg: string;
   azureDevOpsProject: string;
+  autoUpdate?: boolean; // Optional auto-update flag
 };
 
 // Configuration setup state
@@ -185,3 +187,40 @@ export type SetupState =
   | { type: 'savingConfig'; pat: string; org: string; project: string }
   | { type: 'setupComplete' }
   | { type: 'setupError'; error: string; canRetry: boolean };
+
+// Update notification types
+/**
+ * Information about an available update
+ */
+export type UpdateInfo = {
+  readonly currentVersion: string;
+  readonly latestVersion: string;
+};
+
+/**
+ * Update check cache structure
+ */
+export type UpdateCache = {
+  readonly lastCheck: number; // Unix timestamp in milliseconds
+  readonly latestVersion: string;
+};
+
+// Virtual scroll types for hierarchical lists
+export type FlatItem = { type: 'group'; groupIndex: number } | { type: 'file'; groupIndex: number; fileIndex: number };
+
+// Auto-update types
+/**
+ * Package manager used to install fmdt
+ */
+export type PackageManager = 'npm' | 'bun' | 'pnpm' | 'yarn' | 'unknown';
+
+/**
+ * Result of an auto-update attempt
+ */
+export type AutoUpdateResult = {
+  readonly attempted: boolean;
+  readonly success: boolean;
+  readonly method?: PackageManager;
+  readonly version?: string;
+  readonly error?: string;
+};

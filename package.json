@@ -41,7 +41,7 @@
   "scripts": {
     "build": "tsdown",
     "start": "bun run ./src/index.tsx",
-    "dev": "bun run ./src/index.tsx --watch",
+    "dev": "bun --watch ./src/index.tsx",
     "test": "CI=true vitest run",
     "test:watch": "CI=true vitest --watch",
     "typecheck": "tsgo --noEmit",

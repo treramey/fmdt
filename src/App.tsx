@@ -7,13 +7,17 @@ import { ErrorDisplay } from './components/ErrorDisplay.js';
 import { Header } from './components/Header.js';
 import { LoadingScreen } from './components/LoadingScreen.js';
 import { MultiRepositoryMergeStatusDisplay } from './components/MultiRepositoryMergeStatusDisplay.js';
+import { UpdateNotification } from './components/UpdateNotification.js';
 import { AzureDevOpsService } from './services/azure-devops.js';
-import type { CliOptions, MultiRepositoryResult } from './types/index.js';
+import type { CliOptions, MultiRepositoryResult, UpdateInfo } from './types/index.js';
+import { performAutoUpdate } from './utils/auto-updater.js';
 import { getConfig, hasValidConfig } from './utils/config.js';
 import { addToHistory, loadHistory, saveHistory } from './utils/history.js';
+import { checkForUpdates } from './utils/update-checker.js';
 
 type AppProps = {
   readonly cliOptions: CliOptions;
+  readonly version: string;
 };
 
 type AppState =
@@ -23,12 +27,63 @@ type AppState =
   | { type: 'inputBranch' }
   | { type: 'needsSetup' };
 
-export function App({ cliOptions }: AppProps): React.JSX.Element {
+export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   const [branch, setBranch] = useState(cliOptions.branch);
   const [state, setState] = useState<AppState>({
     type: 'loading',
     message: 'Initializing...',
   });
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function checkAutoUpdateEnabled(): Promise<void> {
+      // Check environment variables and config
+      if (process.env.NO_UPDATE_NOTIFIER === '1' || process.env.FMDT_DISABLE_AUTO_UPDATE === '1') {
+        setAutoUpdateEnabled(false);
+        return;
+      }
+
+      const config = await getConfig().catch(() => null);
+      setAutoUpdateEnabled(config?.autoUpdate !== false);
+    }
+
+    void checkAutoUpdateEnabled();
+  }, []);
+
+  useEffect(() => {
+    async function handleUpdates(): Promise<void> {
+      // Early return if auto-update is disabled
+      if (!autoUpdateEnabled) {
+        return;
+      }
+
+      try {
+        const updateCheck = await checkForUpdates(version);
+        if (updateCheck) {
+          setUpdateInfo(updateCheck);
+        }
+
+        const config = await getConfig().catch(() => null);
+
+        if (config?.autoUpdate === false) {
+          return;
+        }
+
+        const result = await performAutoUpdate(version);
+
+        if (result.attempted && result.success) {
+          console.log('Auto-update successful:', result.version);
+        } else if (result.attempted && !result.success) {
+          console.error('Auto-update failed:', result.error);
+        }
+      } catch (error) {
+        console.error('Update error:', error);
+      }
+    }
+
+    void handleUpdates();
+  }, [version, autoUpdateEnabled]);
 
   useEffect(() => {
     async function initialize(): Promise<void> {
@@ -106,12 +161,10 @@ export function App({ cliOptions }: AppProps): React.JSX.Element {
   }
 
   async function handleSetupComplete(): Promise<void> {
-    // After setup completes, transition to next state
     try {
       const config = await getConfig();
 
       if (cliOptions.branch) {
-        // User provided --branch flag, fetch results
         setBranch(cliOptions.branch);
         setState({
           type: 'loading',
@@ -122,7 +175,6 @@ export function App({ cliOptions }: AppProps): React.JSX.Element {
         const result = await service.getBatchBranchMergeStatus(cliOptions.branch);
         setState({ type: 'displayMultiStatus', result });
       } else {
-        // No branch provided, prompt user for input
         setState({ type: 'inputBranch' });
       }
     } catch (error) {
@@ -148,6 +200,9 @@ export function App({ cliOptions }: AppProps): React.JSX.Element {
   if (state.type === 'inputBranch') {
     return (
       <>
+        {autoUpdateEnabled && updateInfo && (
+          <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
+        )}
         <Header />
         <BranchInput onSubmit={handleBranchSubmit} />
       </>
@@ -155,7 +210,14 @@ export function App({ cliOptions }: AppProps): React.JSX.Element {
   }
 
   if (state.type === 'displayMultiStatus') {
-    return <MultiRepositoryMergeStatusDisplay {...state.result} onNewSearch={handleNewSearch} />;
+    return (
+      <>
+        {autoUpdateEnabled && updateInfo && (
+          <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
+        )}
+        <MultiRepositoryMergeStatusDisplay {...state.result} onNewSearch={handleNewSearch} />
+      </>
+    );
   }
 
   return <Text>Unknown state</Text>;

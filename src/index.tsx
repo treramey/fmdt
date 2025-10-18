@@ -9,7 +9,6 @@ import { App } from './App.js';
 import { CliOptionsSchema } from './types/index.js';
 import { deletePatFromKeyring, getConfigFilePath } from './utils/config.js';
 
-// Load package.json in ESM
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8')) as { version: string };
 
@@ -28,7 +27,6 @@ const options = CliOptionsSchema.parse(rawOptions);
 
 // Handle --configure flag: delete existing config and trigger setup
 if (options.configure) {
-  // Delete existing PAT from keyring and config file
   await deletePatFromKeyring();
 
   try {
@@ -43,4 +41,4 @@ if (options.configure) {
 }
 
 // Render React app
-render(<App cliOptions={options} />);
+render(<App cliOptions={options} version={packageJson.version} />);
