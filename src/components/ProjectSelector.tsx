@@ -5,33 +5,16 @@ import { useSimpleVirtualScroll } from '../hooks/useSimpleVirtualScroll.js';
 import type { Project } from '../types/index.js';
 import { colors } from '../utils/colors.js';
 
-/**
- * Props for the ProjectSelector component.
- */
 type ProjectSelectorProps = {
-  /** List of Azure DevOps projects to display */
   projects: Project[];
-  /** Callback invoked when user selects a project */
   onSelect: (projectName: string) => void;
+  initialSelectedName?: string;
 };
 
-/**
- * Interactive project selector with keyboard navigation and virtual scrolling.
- *
- * Displays a list of Azure DevOps projects with arrow key navigation and Enter
- * to select. Uses virtual scrolling to efficiently handle large project lists.
- * Shows scroll indicators when there are more items above or below the viewport.
- *
- * @param props - Component props containing projects and selection callback
- * @returns Virtualized, keyboard-navigable project list
- * @example
- * <ProjectSelector
- *   projects={allProjects}
- *   onSelect={(name) => console.log(`Selected: ${name}`)}
- * />
- */
-export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): React.JSX.Element {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+export function ProjectSelector({ projects, onSelect, initialSelectedName }: ProjectSelectorProps): React.JSX.Element {
+  const initialIndex = initialSelectedName ? projects.findIndex((p) => p.name === initialSelectedName) : 0;
+  const safeInitialIndex = initialIndex >= 0 ? initialIndex : 0;
+  const [selectedIndex, setSelectedIndex] = useState(safeInitialIndex);
 
   const {
     visibleItems: visibleProjects,
@@ -42,7 +25,7 @@ export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): R
   } = useSimpleVirtualScroll({
     items: projects,
     selectedIndex,
-    reservedLines: 6, // Header + instructions + footer + padding
+    reservedLines: 6,
   });
 
   useInput((_input, key) => {
@@ -84,12 +67,15 @@ export function ProjectSelector({ projects, onSelect }: ProjectSelectorProps): R
         {visibleProjects.map((project, index) => {
           const absoluteIndex = scrollOffset + index;
           const isSelected = absoluteIndex === selectedIndex;
+          const isCurrent = project.name === initialSelectedName;
           return (
             <Box key={project.name}>
-              <Text color={isSelected ? colors.iris : colors.text}>
-                {isSelected ? '❯ ' : '  '}
-                {project.name}
-              </Text>
+              <Text color={isSelected ? colors.iris : colors.text}>{isSelected ? '❯ ' : '  '}</Text>
+              {isCurrent ? (
+                <Text color={colors.gold}>● {project.name}</Text>
+              ) : (
+                <Text color={isSelected ? colors.iris : colors.text}>{project.name}</Text>
+              )}
             </Box>
           );
         })}

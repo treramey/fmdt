@@ -1,32 +1,20 @@
-import { promises as fs } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
+import Conf from 'conf';
 
-const HISTORY_FILE = join(homedir(), '.fmdt_history');
+const store = new Conf<{ history: string[] }>({
+  projectName: 'fmdt',
+  defaults: { history: [] },
+});
+
 const MAX_HISTORY = 50;
 
 export async function loadHistory(): Promise<string[]> {
-  try {
-    const content = await fs.readFile(HISTORY_FILE, 'utf-8');
-    const history = JSON.parse(content) as unknown;
-
-    if (Array.isArray(history)) {
-      return history.filter((item): item is string => typeof item === 'string');
-    }
-
-    return [];
-  } catch (error) {
-    console.error('Error loading history:', error);
-    return [];
-  }
+  // conf handles errors internally, returns default if key doesn't exist
+  return store.get('history');
 }
 
 export async function saveHistory(history: string[]): Promise<void> {
-  try {
-    await fs.writeFile(HISTORY_FILE, JSON.stringify(history, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error saving history:', error);
-  }
+  // No error handling needed - conf handles it
+  store.set('history', history);
 }
 
 export function addToHistory(branch: string, currentHistory: string[]): string[] {

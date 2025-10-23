@@ -15,6 +15,7 @@ vi.mock('../src/utils/config.js', () => ({
   getConfigFilePath: vi.fn().mockReturnValue('/mock/config/config.json'),
   saveConfigFile: vi.fn().mockResolvedValue(undefined),
   savePatToKeyring: vi.fn().mockResolvedValue(undefined),
+  updateProjectInConfig: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../src/services/azure-devops.js', () => ({
@@ -31,7 +32,28 @@ vi.mock('../src/services/azure-devops.js', () => ({
       };
     }
     async getProjects() {
-      return [];
+      return [
+        {
+          id: '1',
+          name: 'Project One',
+          description: 'First project',
+          url: 'https://example.com/1',
+          state: 'wellFormed',
+          revision: 1,
+          visibility: 'private',
+          lastUpdateTime: '2025-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          name: 'Project Two',
+          description: 'Second project',
+          url: 'https://example.com/2',
+          state: 'wellFormed',
+          revision: 1,
+          visibility: 'private',
+          lastUpdateTime: '2025-01-01T00:00:00Z',
+        },
+      ];
     }
   },
 }));
@@ -138,5 +160,71 @@ describe('App - Setup Completion', () => {
     // Should render without crashing
     const frame = lastFrame();
     expect(frame).toBeTruthy();
+  });
+});
+
+describe('App - Project Switching', () => {
+  test('should handle --switch-project flag', async () => {
+    const { hasValidConfig, getConfig } = await import('../src/utils/config.js');
+
+    vi.mocked(hasValidConfig).mockResolvedValue(true);
+    vi.mocked(getConfig).mockResolvedValue({
+      azureDevOpsPat: 'test-pat',
+      azureDevOpsOrg: 'test-org',
+      azureDevOpsProject: 'current-project',
+    });
+
+    const cliOptions: CliOptions = { switchProject: true };
+    const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
+
+    // Wait for async operations
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Should show project selector
+    const frame = lastFrame();
+    expect(frame).toContain('Select your Azure DevOps project');
+  });
+
+  test('should show error when no projects found during switch', async () => {
+    const { hasValidConfig, getConfig } = await import('../src/utils/config.js');
+    const { AzureDevOpsService } = await import('../src/services/azure-devops.js');
+
+    vi.mocked(hasValidConfig).mockResolvedValue(true);
+    vi.mocked(getConfig).mockResolvedValue({
+      azureDevOpsPat: 'test-pat',
+      azureDevOpsOrg: 'test-org',
+      azureDevOpsProject: 'current-project',
+    });
+
+    // Mock getProjects to return empty array
+    // @ts-expect-error - Mocking class method
+    AzureDevOpsService.prototype.getProjects = vi.fn().mockResolvedValue([]);
+
+    const cliOptions: CliOptions = { switchProject: true };
+    const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
+
+    // Wait for async operations
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Should show error
+    const frame = lastFrame();
+    expect(frame).toContain('No projects found');
+  });
+
+  test('should handle errors during project loading gracefully', async () => {
+    const { hasValidConfig, getConfig } = await import('../src/utils/config.js');
+
+    vi.mocked(hasValidConfig).mockResolvedValue(true);
+    vi.mocked(getConfig).mockRejectedValueOnce(new Error('Failed to load config'));
+
+    const cliOptions: CliOptions = { switchProject: true };
+    const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
+
+    // Wait for error to surface
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Should show error message
+    const frame = lastFrame();
+    expect(frame).toContain('Failed to load config');
   });
 });

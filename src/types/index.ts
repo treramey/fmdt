@@ -1,17 +1,16 @@
 import { z } from 'zod/v4';
 
-// CLI Options
 export const CliOptionsSchema = z.object({
   branch: z.string().optional(),
   repository: z.string().optional(),
-  configure: z.boolean().optional(), // NEW: trigger setup flow
+  configure: z.boolean().optional(),
+  switchProject: z.boolean().optional(),
   help: z.boolean().optional(),
   version: z.boolean().optional(),
 });
 
 export type CliOptions = z.infer<typeof CliOptionsSchema>;
 
-// Azure DevOps API Types
 export type Repository = {
   id: string;
   name: string;
@@ -75,7 +74,6 @@ export type ParsedPullRequest = {
   } | null;
 };
 
-// API Response Types
 export type GetRepositoriesResponse = {
   value: Repository[];
   count: number;
@@ -91,7 +89,6 @@ export type GitDiffResponse = {
   changes: unknown[];
 };
 
-// Branch Merge Status
 export type BranchMergeStatus = {
   branch: string;
   repository: string;
@@ -119,7 +116,6 @@ export type BranchMergeStatus = {
   };
 };
 
-// Type guards for Promise.allSettled results
 export function isFulfilledResult<T>(result: PromiseSettledResult<T>): result is PromiseFulfilledResult<T> {
   return result.status === 'fulfilled';
 }
@@ -128,7 +124,6 @@ export function isRejectedResult<T>(result: PromiseSettledResult<T>): result is 
   return result.status === 'rejected';
 }
 
-// Batch operation result tracking
 export type BatchOperationResult = {
   total: number;
   successful: number;
@@ -136,13 +131,11 @@ export type BatchOperationResult = {
   failedRepos: string[];
 };
 
-// Multi-repository merge status display props
 export type MultiRepositoryResult = {
   statuses: BranchMergeStatus[];
   operationSummary: BatchOperationResult;
 };
 
-// Azure DevOps Project type (from API)
 export type Project = {
   id: string;
   name: string;
@@ -154,31 +147,27 @@ export type Project = {
   lastUpdateTime: string;
 };
 
-// Projects API response
 export type GetProjectsResponse = {
   value: Project[];
   count: number;
 };
 
-// Configuration file schema (stored on disk)
 export const ConfigFileSchema = z.object({
   azureDevOpsOrg: z.string().min(1),
   azureDevOpsProject: z.string().min(1),
-  version: z.string().default('1.0.0'), // For future migrations
-  autoUpdate: z.boolean().optional().default(true), // Auto-update functionality (opt-out)
+  version: z.string().default('1.0.0'),
+  autoUpdate: z.boolean().optional().default(true),
 });
 
 export type ConfigFile = z.infer<typeof ConfigFileSchema>;
 
-// Runtime configuration (includes PAT from keyring)
 export type RuntimeConfig = {
   azureDevOpsPat: string;
   azureDevOpsOrg: string;
   azureDevOpsProject: string;
-  autoUpdate?: boolean; // Optional auto-update flag
+  autoUpdate?: boolean;
 };
 
-// Configuration setup state
 export type SetupState =
   | { type: 'inputPat' }
   | { type: 'validatingPat'; pat: string; org: string }
@@ -188,35 +177,20 @@ export type SetupState =
   | { type: 'setupComplete' }
   | { type: 'setupError'; error: string; canRetry: boolean };
 
-// Update notification types
-/**
- * Information about an available update
- */
 export type UpdateInfo = {
   readonly currentVersion: string;
   readonly latestVersion: string;
 };
 
-/**
- * Update check cache structure
- */
 export type UpdateCache = {
   readonly lastCheck: number; // Unix timestamp in milliseconds
   readonly latestVersion: string;
 };
 
-// Virtual scroll types for hierarchical lists
 export type FlatItem = { type: 'group'; groupIndex: number } | { type: 'file'; groupIndex: number; fileIndex: number };
 
-// Auto-update types
-/**
- * Package manager used to install fmdt
- */
 export type PackageManager = 'npm' | 'bun' | 'pnpm' | 'yarn' | 'unknown';
 
-/**
- * Result of an auto-update attempt
- */
 export type AutoUpdateResult = {
   readonly attempted: boolean;
   readonly success: boolean;
@@ -224,3 +198,49 @@ export type AutoUpdateResult = {
   readonly version?: string;
   readonly error?: string;
 };
+
+export type RepositoryBranches = {
+  repositoryId: string;
+  repositoryName: string;
+  branches: string[];
+  fetchedAt: number;
+};
+
+export const BranchCacheSchema = z.object({
+  lastUpdated: z.number(),
+  repositories: z.array(
+    z.object({
+      repositoryId: z.string(),
+      repositoryName: z.string(),
+      branches: z.array(z.string()),
+      fetchedAt: z.number(),
+    }),
+  ),
+  allBranches: z.array(z.string()),
+  version: z.string().default('1.0.0'),
+});
+
+
+export type BranchSuggestion = {
+  branchName: string;
+  repositories: string[];
+  matchScore: number;
+
+export type BranchRef = {
+  name: string; 
+  objectId: string;
+  creator?: {
+    displayName: string;
+    uniqueName: string;
+  };
+};
+
+/**
+ * API response for branch listing
+ */
+export type GetBranchRefsResponse = {
+  value: BranchRef[];
+  count: number;
+};
+
+export type BranchCache = z.infer<typeof BranchCacheSchema>;

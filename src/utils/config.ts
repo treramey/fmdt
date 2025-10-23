@@ -104,8 +104,21 @@ export async function hasValidConfig(): Promise<boolean> {
   }
 }
 
+export async function updateProjectInConfig(projectName: string): Promise<void> {
+  const currentConfig = await loadConfigFile();
+  if (!currentConfig) {
+    throw new Error('Configuration not found');
+  }
+
+  const updatedConfig: ConfigFile = {
+    ...currentConfig,
+    azureDevOpsProject: projectName,
+  };
+
+  await saveConfigFile(updatedConfig);
+}
+
 export function createAuthHeader(pat: string): string {
-  // Azure DevOps uses Basic authentication with an empty username and PAT as password
   const credentials = Buffer.from(`:${pat}`).toString('base64');
   return `Basic ${credentials}`;
 }

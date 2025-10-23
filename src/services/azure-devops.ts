@@ -1,6 +1,7 @@
 import type {
   BatchOperationResult,
   BranchMergeStatus,
+  GetBranchRefsResponse,
   GetProjectsResponse,
   GetPullRequestsResponse,
   GetRepositoriesResponse,
@@ -11,6 +12,7 @@ import type {
   PullRequest,
   PullRequestDetails,
   Repository,
+  RepositoryBranches,
   RuntimeConfig,
 } from '../types/index.js';
 import { isFulfilledResult, isRejectedResult } from '../types/index.js';
@@ -277,5 +279,46 @@ export class AzureDevOpsService {
       statuses: branchExists,
       operationSummary,
     };
+  }
+
+  async getAllBranches(): Promise<RepositoryBranches[]> {
+    // STEP 1: Fetch all repositories
+    const repositories = await this.getRepositories();
+
+    // STEP 2: Create promises for parallel branch fetching
+    const promises = repositories.map(async (repo) => {
+      const url = `${this.baseUrl}${repo.id}/refs?filter=heads/&api-version=7.1`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: this.authHeader,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch branches: ${response.status}`);
+      }
+
+      const data = (await response.json()) as GetBranchRefsResponse;
+
+      // CRITICAL: Strip "refs/heads/" prefix
+      const branches = data.value.map((ref) => ref.name.replace('refs/heads/', ''));
+
+      return {
+        repositoryId: repo.id,
+        repositoryName: repo.name,
+        branches,
+        fetchedAt: Date.now(),
+      };
+    });
+
+    // STEP 3: Execute in parallel with allSettled
+    const results = await Promise.allSettled(promises);
+
+    // STEP 4: Filter successful results
+    const successful = results.filter(isFulfilledResult).map((result) => result.value);
+
+    return successful; // Return what we got, even if some failed
   }
 }

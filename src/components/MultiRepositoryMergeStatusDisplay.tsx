@@ -7,24 +7,30 @@ import { MergeStatusDisplay } from './MergeStatusDisplay.js';
 
 type MultiRepositoryMergeStatusDisplayProps = MultiRepositoryResult & {
   readonly onNewSearch?: () => void;
+  readonly onSwitchProject?: () => void;
 };
 
 export function MultiRepositoryMergeStatusDisplay({
   statuses,
   operationSummary,
   onNewSearch,
+  onSwitchProject,
 }: MultiRepositoryMergeStatusDisplayProps): React.JSX.Element {
   useInput((_input, key) => {
+    if (key.ctrl && _input === 'p' && onSwitchProject) {
+      onSwitchProject();
+      return;
+    }
+
     if (key.return && onNewSearch) {
       onNewSearch();
     }
-    // Note: Ctrl+C handled automatically by Ink
   });
   if (statuses.length === 0) {
     return (
       <Box flexDirection="column" padding={1}>
         <Text color={colors.gold}>Branch not found in any of {operationSummary.total} repositories</Text>
-        <Footer showSearch />
+        <Footer showSearch showProjectSwitch />
       </Box>
     );
   }
@@ -44,7 +50,7 @@ export function MultiRepositoryMergeStatusDisplay({
         </Box>
       ))}
 
-      <Footer showSearch />
+      <Footer showSearch showProjectSwitch />
     </Box>
   );
 }

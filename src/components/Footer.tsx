@@ -6,20 +6,26 @@ interface SearchFooterProps {
   showNavigation?: boolean;
   showExit?: boolean;
   showSearch?: boolean;
+  showProjectSwitch?: boolean;
 }
 
 export const Footer: React.FC<SearchFooterProps> = ({
   showNavigation = false,
   showExit = true,
   showSearch = false,
+  showProjectSwitch = false,
 }) => {
   const getInstructions = (): string => {
     if (showNavigation && showSearch) {
-      return 'Enter: To search, Arrow keys (↑↓): To navigate history';
+      return showProjectSwitch
+        ? 'Ctrl+P: Switch project, Enter: Search, ↑↓: History'
+        : 'Enter: To search, Arrow keys (↑↓): To navigate history';
     }
 
     if (showSearch) {
-      return 'Enter: To search, Press Ctrl-C to exit';
+      return showProjectSwitch
+        ? 'Ctrl+P: Switch project, Enter: Search, Ctrl-C: Exit'
+        : 'Enter: To search, Press Ctrl-C to exit';
     }
 
     if (showExit) {

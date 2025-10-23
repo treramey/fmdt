@@ -63,6 +63,7 @@ const {
   deletePatFromKeyring,
   hasValidConfig,
   getConfig,
+  updateProjectInConfig,
 } = await import('../src/utils/config.js');
 
 describe('createAuthHeader', () => {
@@ -237,6 +238,61 @@ describe('config file operations', () => {
         azureDevOpsOrg: 'test-org',
         azureDevOpsProject: 'test-project',
         autoUpdate: true,
+      });
+    });
+  });
+
+  describe('updateProjectInConfig', () => {
+    test('should update only project field', async () => {
+      // Setup: save initial config
+      await savePatToKeyring('test-pat');
+      await saveConfigFile({
+        azureDevOpsOrg: 'test-org',
+        azureDevOpsProject: 'old-project',
+        version: '1.0.0',
+        autoUpdate: true,
+      });
+
+      // Execute: update project
+      await updateProjectInConfig('new-project');
+
+      // Verify: only project changed
+      const updated = await loadConfigFile();
+      expect(updated?.azureDevOpsProject).toBe('new-project');
+      expect(updated?.azureDevOpsOrg).toBe('test-org');
+      expect(updated?.autoUpdate).toBe(true);
+      expect(updated?.version).toBe('1.0.0');
+    });
+
+    test('should throw error when config does not exist', async () => {
+      // Setup: delete config
+      const configPath = getConfigFilePath();
+      await rm(configPath, { force: true });
+
+      // Verify: throws error
+      await expect(updateProjectInConfig('any-project'))
+        .rejects.toThrow('Configuration not found');
+    });
+
+    test('should preserve other config fields when updating project', async () => {
+      // Setup: save config with all fields
+      await saveConfigFile({
+        azureDevOpsOrg: 'original-org',
+        azureDevOpsProject: 'original-project',
+        version: '1.0.0',
+        autoUpdate: false,
+      });
+
+      // Execute: update project
+      await updateProjectInConfig('updated-project');
+
+      // Verify: all other fields preserved
+      const updated = await loadConfigFile();
+      expect(updated).toEqual({
+        azureDevOpsOrg: 'original-org',
+        azureDevOpsProject: 'updated-project',
+        version: '1.0.0',
+        autoUpdate: false,
       });
     });
   });

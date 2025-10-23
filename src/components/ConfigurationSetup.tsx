@@ -24,7 +24,6 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
   }
 
   async function handleOrgSubmit(org: string) {
-    // Get PAT from current state
     if (setupState.type !== 'inputOrg') return;
     const { pat } = setupState;
 
@@ -34,7 +33,7 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
       const tempConfig = {
         azureDevOpsPat: pat,
         azureDevOpsOrg: org,
-        azureDevOpsProject: '', // Not needed for getProjects
+        azureDevOpsProject: '',
       };
 
       const service = new AzureDevOpsService(tempConfig);
@@ -53,7 +52,6 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-      // CRITICAL: Determine if user can retry based on error type
       const canRetry = errorMessage.includes('Invalid PAT') || errorMessage.includes('Organization not found');
 
       setSetupState({
@@ -71,14 +69,12 @@ export function ConfigurationSetup({ onComplete }: ConfigurationSetupProps): Rea
     setSetupState({ type: 'savingConfig', pat, org, project: projectName });
 
     try {
-      // CRITICAL: Save PAT first, then config file
-      // If PAT save fails, we don't want partial config
       await savePatToKeyring(pat);
       await saveConfigFile({
         azureDevOpsOrg: org,
         azureDevOpsProject: projectName,
         version: '1.0.0',
-        autoUpdate: true, // Default to enabled
+        autoUpdate: true,
       });
 
       setSetupState({ type: 'setupComplete' });

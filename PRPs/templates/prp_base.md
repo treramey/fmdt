@@ -89,7 +89,7 @@ Create the core data models to ensure type safety and consistency.
 // - Type guards and validators
 
 // Example Zod schema:
-import { z } from 'zod';
+import { z } from "zod";
 
 const UserSchema = z.object({
   id: z.string().uuid(),
@@ -123,7 +123,7 @@ Task N:
 
 ```
 
-### Per task pseudocode as needed added to each task
+### Per task pseudocode to be added to each task
 
 ```typescript
 // Task 1
@@ -143,7 +143,7 @@ async function newFeature(param: string): Promise<Result> {
         await rateLimiter.acquire();
         return await externalApi.call(validated);
       },
-      { attempts: 3, backoff: 'exponential' }
+      { attempts: 3, backoff: "exponential" },
     );
 
     // PATTERN: Standardized response format
@@ -186,27 +186,27 @@ bun run tsc --noEmit                             # Type checking
 
 ```typescript
 // CREATE tests/new-feature.test.ts with these test cases:
-import { describe, it, expect, vi } from 'vitest';
-import { newFeature } from '../src/new-feature';
+import { describe, it, expect, vi } from "vitest";
+import { newFeature } from "../src/new-feature";
 
-describe('newFeature', () => {
-  it('should work with valid input', async () => {
-    const result = await newFeature('valid_input');
-    expect(result.status).toBe('success');
+describe("newFeature", () => {
+  it("should work with valid input", async () => {
+    const result = await newFeature("valid_input");
+    expect(result.status).toBe("success");
   });
 
-  it('should throw ZodError on invalid input', async () => {
-    await expect(newFeature('')).rejects.toThrow();
+  it("should throw ZodError on invalid input", async () => {
+    await expect(newFeature("")).rejects.toThrow();
   });
 
-  it('should handle timeouts gracefully', async () => {
-    vi.mock('../src/external-api', () => ({
-      call: vi.fn().mockRejectedValue(new Error('Timeout')),
+  it("should handle timeouts gracefully", async () => {
+    vi.mock("../src/external-api", () => ({
+      call: vi.fn().mockRejectedValue(new Error("Timeout")),
     }));
 
-    const result = await newFeature('valid');
-    expect(result.status).toBe('error');
-    expect(result.message).toContain('timeout');
+    const result = await newFeature("valid");
+    expect(result.status).toBe("error");
+    expect(result.message).toContain("timeout");
   });
 });
 ```
@@ -256,4 +256,3 @@ curl -X POST http://localhost:3000/feature \
 - ❌ Don't mix Promise and async/await patterns inconsistently
 - ❌ Don't hardcode values that should be config
 - ❌ Don't catch all errors - be specific with error types
-

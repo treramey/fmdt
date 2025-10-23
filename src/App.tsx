@@ -7,11 +7,13 @@ import { ErrorDisplay } from './components/ErrorDisplay.js';
 import { Header } from './components/Header.js';
 import { LoadingScreen } from './components/LoadingScreen.js';
 import { MultiRepositoryMergeStatusDisplay } from './components/MultiRepositoryMergeStatusDisplay.js';
+import { ProjectSelector } from './components/ProjectSelector.js';
 import { UpdateNotification } from './components/UpdateNotification.js';
 import { AzureDevOpsService } from './services/azure-devops.js';
-import type { CliOptions, MultiRepositoryResult, UpdateInfo } from './types/index.js';
+import type { CliOptions, MultiRepositoryResult, Project, UpdateInfo } from './types/index.js';
 import { performAutoUpdate } from './utils/auto-updater.js';
-import { getConfig, hasValidConfig } from './utils/config.js';
+import { getConfig, hasValidConfig, updateProjectInConfig } from './utils/config.js';
+import { getUniqueBranches, isCacheStale, loadBranchCache, saveBranchCache } from './utils/branch-cache.js';
 import { addToHistory, loadHistory, saveHistory } from './utils/history.js';
 import { checkForUpdates } from './utils/update-checker.js';
 
@@ -25,7 +27,8 @@ type AppState =
   | { type: 'error'; error: string }
   | { type: 'displayMultiStatus'; result: MultiRepositoryResult }
   | { type: 'inputBranch' }
-  | { type: 'needsSetup' };
+  | { type: 'needsSetup' }
+  | { type: 'selectingProject'; projects: Project[]; currentProjectName: string };
 
 export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   const [branch, setBranch] = useState(cliOptions.branch);
@@ -35,10 +38,10 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   });
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState<boolean>(true);
+  const [currentProject, setCurrentProject] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     async function checkAutoUpdateEnabled(): Promise<void> {
-      // Check environment variables and config
       if (process.env.NO_UPDATE_NOTIFIER === '1' || process.env.FMDT_DISABLE_AUTO_UPDATE === '1') {
         setAutoUpdateEnabled(false);
         return;
@@ -53,7 +56,6 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
 
   useEffect(() => {
     async function handleUpdates(): Promise<void> {
-      // Early return if auto-update is disabled
       if (!autoUpdateEnabled) {
         return;
       }
@@ -86,16 +88,74 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
   }, [version, autoUpdateEnabled]);
 
   useEffect(() => {
+    async function refreshBranchCache(): Promise<void> {
+      try {
+        const cache = loadBranchCache();
+        const stale = !cache || isCacheStale(cache, 24 * 60 * 60 * 1000);
+
+        if (stale) {
+          // Background refresh - don't await
+          void updateBranchCache();
+        }
+      } catch (error) {
+        console.error('Branch cache error:', error);
+      }
+    }
+
+    async function updateBranchCache(): Promise<void> {
+      try {
+        const config = await getConfig();
+        const service = new AzureDevOpsService(config);
+        const repos = await service.getAllBranches();
+
+        const allBranches = getUniqueBranches(repos);
+
+        saveBranchCache({
+          lastUpdated: Date.now(),
+          repositories: repos,
+          allBranches,
+          version: '1.0.0',
+        });
+      } catch (error) {
+        // Show non-blocking error notification
+        console.error('Failed to update branch cache:', error);
+      }
+    }
+
+    void refreshBranchCache();
+  }, []);
+
+  useEffect(() => {
     async function initialize(): Promise<void> {
       try {
-        // BEFORE checking for branch, check hasValidConfig()
         const configExists = await hasValidConfig();
         if (!configExists) {
           setState({ type: 'needsSetup' });
           return;
         }
 
+        if (cliOptions.switchProject) {
+          setState({ type: 'loading', message: 'Loading projects...' });
+
+          const config = await getConfig();
+          setCurrentProject(config.azureDevOpsProject);
+          const service = new AzureDevOpsService(config);
+          const projects = await service.getProjects();
+
+          if (projects.length === 0) {
+            setState({
+              type: 'error',
+              error: 'No projects found in your organization.',
+            });
+            return;
+          }
+
+          setState({ type: 'selectingProject', projects, currentProjectName: config.azureDevOpsProject });
+          return;
+        }
+
         const config = await getConfig();
+        setCurrentProject(config.azureDevOpsProject);
         const service = new AzureDevOpsService(config);
 
         if (!branch) {
@@ -120,18 +180,16 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
     }
 
     void initialize();
-  }, [branch]);
+  }, [branch, cliOptions.switchProject]);
 
   async function handleBranchSubmit(branchInput: string): Promise<void> {
     setBranch(branchInput);
 
-    // Save to history
     try {
       const currentHistory = await loadHistory();
       const updatedHistory = addToHistory(branchInput, currentHistory);
       await saveHistory(updatedHistory);
     } catch (error) {
-      // Log but don't fail - history saving shouldn't break the app
       console.error('Failed to save history:', error);
     }
 
@@ -185,6 +243,48 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
     }
   }
 
+  async function handleSwitchProject(): Promise<void> {
+    try {
+      setState({ type: 'loading', message: 'Loading projects...' });
+
+      const config = await getConfig();
+      const service = new AzureDevOpsService(config);
+      const projects = await service.getProjects();
+
+      if (projects.length === 0) {
+        setState({
+          type: 'error',
+          error: 'No projects found in your organization.',
+        });
+        return;
+      }
+
+      setState({ type: 'selectingProject', projects, currentProjectName: config.azureDevOpsProject });
+    } catch (error) {
+      setState({
+        type: 'error',
+        error: error instanceof Error ? error.message : 'Failed to load projects',
+      });
+    }
+  }
+
+  async function handleProjectSelected(projectName: string): Promise<void> {
+    try {
+      setState({ type: 'loading', message: 'Updating configuration...' });
+
+      await updateProjectInConfig(projectName);
+      setCurrentProject(projectName);
+
+      setBranch(undefined);
+      setState({ type: 'inputBranch' });
+    } catch (error) {
+      setState({
+        type: 'error',
+        error: error instanceof Error ? error.message : 'Failed to update project',
+      });
+    }
+  }
+
   if (state.type === 'needsSetup') {
     return <ConfigurationSetup onComplete={handleSetupComplete} />;
   }
@@ -203,8 +303,8 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
         {autoUpdateEnabled && updateInfo && (
           <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
         )}
-        <Header />
-        <BranchInput onSubmit={handleBranchSubmit} />
+        <Header {...(currentProject ? { currentProject } : {})} />
+        <BranchInput onSubmit={handleBranchSubmit} onSwitchProject={handleSwitchProject} />
       </>
     );
   }
@@ -215,8 +315,22 @@ export function App({ cliOptions, version }: AppProps): React.JSX.Element {
         {autoUpdateEnabled && updateInfo && (
           <UpdateNotification currentVersion={updateInfo.currentVersion} latestVersion={updateInfo.latestVersion} />
         )}
-        <MultiRepositoryMergeStatusDisplay {...state.result} onNewSearch={handleNewSearch} />
+        <MultiRepositoryMergeStatusDisplay
+          {...state.result}
+          onNewSearch={handleNewSearch}
+          onSwitchProject={handleSwitchProject}
+        />
       </>
+    );
+  }
+
+  if (state.type === 'selectingProject') {
+    return (
+      <ProjectSelector
+        projects={state.projects}
+        onSelect={handleProjectSelected}
+        initialSelectedName={state.currentProjectName}
+      />
     );
   }
 
