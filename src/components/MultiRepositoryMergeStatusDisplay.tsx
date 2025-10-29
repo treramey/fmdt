@@ -17,7 +17,7 @@ export function MultiRepositoryMergeStatusDisplay({
   onSwitchProject,
 }: MultiRepositoryMergeStatusDisplayProps): React.JSX.Element {
   useInput((_input, key) => {
-    if (key.ctrl && _input === 'p' && onSwitchProject) {
+    if (key.ctrl && key.shift && _input === 'P' && onSwitchProject) {
       onSwitchProject();
       return;
     }

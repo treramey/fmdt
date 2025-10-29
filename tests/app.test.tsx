@@ -58,6 +58,18 @@ vi.mock('../src/services/azure-devops.js', () => ({
   },
 }));
 
+// Mock the new hooks
+vi.mock('../src/hooks/useAutoUpdate.js', () => ({
+  useAutoUpdate: vi.fn().mockReturnValue({
+    updateInfo: null,
+    autoUpdateEnabled: false,
+  }),
+}));
+
+vi.mock('../src/hooks/useBranchCache.js', () => ({
+  useBranchCache: vi.fn(),
+}));
+
 describe('App - Setup Completion', () => {
   test('should transition to inputBranch after setup when no --branch flag', async () => {
     const { hasValidConfig } = await import('../src/utils/config.js');
@@ -68,7 +80,7 @@ describe('App - Setup Completion', () => {
       configure: false,
     };
 
-    const { lastFrame } = render(<App cliOptions={cliOptions} />);
+    const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
 
     // Wait for initial render
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -104,7 +116,6 @@ describe('App - Setup Completion', () => {
       },
     });
 
-    // @ts-expect-error - Mocking class method
     AzureDevOpsService.prototype.getBatchBranchMergeStatus = mockGetBatchBranchMergeStatus;
 
     const cliOptions: CliOptions = {
@@ -112,7 +123,7 @@ describe('App - Setup Completion', () => {
       configure: false,
     };
 
-    const { lastFrame } = render(<App cliOptions={cliOptions} />);
+    const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
 
     // Wait for async operations
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -131,7 +142,7 @@ describe('App - Setup Completion', () => {
       configure: false,
     };
 
-    const { lastFrame } = render(<App cliOptions={cliOptions} />);
+    const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
 
     // Wait for async initialization
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -152,7 +163,7 @@ describe('App - Setup Completion', () => {
       configure: false,
     };
 
-    const { lastFrame } = render(<App cliOptions={cliOptions} />);
+    const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
 
     // Wait for error to surface
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -167,8 +178,9 @@ describe('App - Project Switching', () => {
   test('should handle --switch-project flag', async () => {
     const { hasValidConfig, getConfig } = await import('../src/utils/config.js');
 
-    vi.mocked(hasValidConfig).mockResolvedValue(true);
-    vi.mocked(getConfig).mockResolvedValue({
+    // Reset mocks to clear any previous test's mock state
+    vi.mocked(hasValidConfig).mockReset().mockResolvedValue(true);
+    vi.mocked(getConfig).mockReset().mockResolvedValue({
       azureDevOpsPat: 'test-pat',
       azureDevOpsOrg: 'test-org',
       azureDevOpsProject: 'current-project',
@@ -197,7 +209,6 @@ describe('App - Project Switching', () => {
     });
 
     // Mock getProjects to return empty array
-    // @ts-expect-error - Mocking class method
     AzureDevOpsService.prototype.getProjects = vi.fn().mockResolvedValue([]);
 
     const cliOptions: CliOptions = { switchProject: true };
@@ -213,9 +224,23 @@ describe('App - Project Switching', () => {
 
   test('should handle errors during project loading gracefully', async () => {
     const { hasValidConfig, getConfig } = await import('../src/utils/config.js');
+    const { AzureDevOpsService } = await import('../src/services/azure-devops.js');
 
     vi.mocked(hasValidConfig).mockResolvedValue(true);
-    vi.mocked(getConfig).mockRejectedValueOnce(new Error('Failed to load config'));
+    vi.mocked(getConfig).mockResolvedValue({
+      azureDevOpsPat: 'mock-pat',
+      azureDevOpsOrg: 'mock-org',
+      azureDevOpsProject: 'mock-project',
+    });
+
+    // Save original implementation
+    // biome-ignore lint/suspicious/noExplicitAny: Required for mocking prototype methods in tests
+    const originalGetProjects = (AzureDevOpsService as any).prototype.getProjects;
+
+    // Mock getProjects to throw an error
+    const mockGetProjects = vi.fn().mockRejectedValue(new Error('Failed to load projects'));
+    // biome-ignore lint/suspicious/noExplicitAny: Required for mocking prototype methods in tests
+    (AzureDevOpsService as any).prototype.getProjects = mockGetProjects;
 
     const cliOptions: CliOptions = { switchProject: true };
     const { lastFrame } = render(<App cliOptions={cliOptions} version="1.0.0" />);
@@ -225,6 +250,10 @@ describe('App - Project Switching', () => {
 
     // Should show error message
     const frame = lastFrame();
-    expect(frame).toContain('Failed to load config');
+    expect(frame).toContain('Failed to load projects');
+
+    // Restore original implementation
+    // biome-ignore lint/suspicious/noExplicitAny: Required for mocking prototype methods in tests
+    (AzureDevOpsService as any).prototype.getProjects = originalGetProjects;
   });
 });

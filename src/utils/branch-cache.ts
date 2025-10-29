@@ -23,7 +23,7 @@ export function loadBranchCache(): BranchCache | null {
   }
 }
 
-export function saveBranchCache(cache: BranchCache): void {
+function saveBranchCache(cache: BranchCache): void {
   store.set('branchCache', cache);
 }
 
@@ -32,7 +32,7 @@ export function isCacheStale(cache: BranchCache, ttl: number = DEFAULT_CACHE_TTL
   return now - cache.lastUpdated > ttl;
 }
 
-export function getUniqueBranches(repos: RepositoryBranches[]): string[] {
+function getUniqueBranches(repos: RepositoryBranches[]): string[] {
   const allBranches = new Set<string>();
   for (const repo of repos) {
     for (const branch of repo.branches) {
@@ -40,4 +40,26 @@ export function getUniqueBranches(repos: RepositoryBranches[]): string[] {
     }
   }
   return Array.from(allBranches).sort();
+}
+
+export function clearBranchCache(): void {
+  store.delete('branchCache');
+}
+
+export async function refreshBranchCache(): Promise<void> {
+  const { AzureDevOpsService } = await import('../services/azure-devops.js');
+  const { getConfig } = await import('./config.js');
+
+  const config = await getConfig();
+  const service = new AzureDevOpsService(config);
+  const repos = await service.getAllBranches();
+
+  const allBranches = getUniqueBranches(repos);
+
+  saveBranchCache({
+    lastUpdated: Date.now(),
+    repositories: repos,
+    allBranches,
+    version: '1.0.0',
+  });
 }

@@ -158,6 +158,8 @@ export class AzureDevOpsService {
     };
 
     if (!parsedPR || !parsedPR.pullRequestsDetails) {
+      // No PRs found - check if branch is merged via diff API
+      await this.checkMergesWithoutPR(repositoryId, branch, status);
       return status;
     }
 
@@ -222,6 +224,65 @@ export class AzureDevOpsService {
     const changeCounts = data.changeCounts;
 
     return !changeCounts || Object.keys(changeCounts).length === 0;
+  }
+
+  private async getLastCommitInfo(
+    repositoryId: string,
+    branch: string,
+  ): Promise<{ date: string; author: string } | null> {
+    try {
+      const url = `${this.baseUrl}${repositoryId}/commits?searchCriteria.itemVersion.version=${branch}&$top=1&api-version=7.1`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: this.authHeader,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) return null;
+
+      const data = (await response.json()) as { value: { committer: { date: string; name: string } }[] };
+      const commit = data.value?.[0];
+
+      if (!commit) return null;
+
+      return {
+        date: commit.committer.date,
+        author: commit.committer.name,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private async checkMergesWithoutPR(repositoryId: string, branch: string, status: BranchMergeStatus): Promise<void> {
+    const branches = [
+      { name: 'dev', key: 'dev' },
+      { name: 'qa', key: 'qa' },
+      { name: 'staging', key: 'staging' },
+      { name: 'master', key: 'master' },
+    ] as const;
+
+    // Get last commit info once (reuse for all merged branches)
+    let lastCommitInfo: { date: string; author: string } | null = null;
+
+    for (const targetBranch of branches) {
+      const isFullyMerged = await this.checkBranchFullyMerged(repositoryId, branch, targetBranch.name);
+
+      if (isFullyMerged) {
+        // Lazy load commit info only when needed
+        if (!lastCommitInfo) {
+          lastCommitInfo = await this.getLastCommitInfo(repositoryId, branch);
+        }
+
+        status.mergedTo[targetBranch.key] = {
+          merged: true,
+          date: lastCommitInfo?.date || null,
+          mergedBy: lastCommitInfo ? `~${lastCommitInfo.author}` : null,
+        };
+      }
+    }
   }
 
   private async validateMergesWithDiff(repositoryId: string, branch: string, status: BranchMergeStatus): Promise<void> {

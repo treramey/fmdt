@@ -157,7 +157,7 @@ describe('MultiRepositoryMergeStatusDisplay', () => {
       const { lastFrame } = render(<MultiRepositoryMergeStatusDisplay {...result} />);
 
       const output = lastFrame();
-      expect(output).toContain('Ctrl+P: Switch project');
+      expect(output).toContain('Type /project then Enter (or Ctrl+Shift+P): Switch project');
       expect(output).toContain('Ctrl-C: Exit');
     });
 
@@ -175,7 +175,7 @@ describe('MultiRepositoryMergeStatusDisplay', () => {
       const { lastFrame } = render(<MultiRepositoryMergeStatusDisplay {...result} />);
 
       const output = lastFrame();
-      expect(output).toContain('Ctrl+P: Switch project');
+      expect(output).toContain('Type /project then Enter (or Ctrl+Shift+P): Switch project');
       expect(output).toContain('Ctrl-C: Exit');
     });
   });

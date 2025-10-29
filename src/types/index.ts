@@ -220,14 +220,8 @@ export const BranchCacheSchema = z.object({
   version: z.string().default('1.0.0'),
 });
 
-
-export type BranchSuggestion = {
-  branchName: string;
-  repositories: string[];
-  matchScore: number;
-
 export type BranchRef = {
-  name: string; 
+  name: string;
   objectId: string;
   creator?: {
     displayName: string;
@@ -244,3 +238,11 @@ export type GetBranchRefsResponse = {
 };
 
 export type BranchCache = z.infer<typeof BranchCacheSchema>;
+
+export type AppState =
+  | { type: 'loading'; message: string }
+  | { type: 'error'; error: string }
+  | { type: 'displayMultiStatus'; result: MultiRepositoryResult }
+  | { type: 'inputBranch' }
+  | { type: 'needsSetup' }
+  | { type: 'selectingProject'; projects: Project[]; currentProjectName: string };

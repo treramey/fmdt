@@ -270,8 +270,7 @@ describe('config file operations', () => {
       await rm(configPath, { force: true });
 
       // Verify: throws error
-      await expect(updateProjectInConfig('any-project'))
-        .rejects.toThrow('Configuration not found');
+      await expect(updateProjectInConfig('any-project')).rejects.toThrow('Configuration not found');
     });
 
     test('should preserve other config fields when updating project', async () => {

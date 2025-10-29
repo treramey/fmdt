@@ -30,6 +30,7 @@
 - ⚡ **Fast Parallel Scanning** - Concurrent API requests for maximum performance
 - 📊 **Rich Merge History** - View merge dates, authors, and status at a glance
 - 🚀 **Smart Filtering** - Display results only for repositories containing the branch
+- 🔄 **Project Switching** - Switch between Azure DevOps projects interactively
 - 🔐 **Secure Credentials** - PAT tokens stored safely in system keychain
 - 🛠️ **Type Safety** - Full TypeScript implementation with strict type checking
 - ✅ **Comprehensive Testing** - Full test coverage with vitest
@@ -153,6 +154,7 @@ fmdt --help                    # Show help information
 fmdt --version                 # Show version number
 fmdt --branch <name>           # Scan for specific branch
 fmdt --configure               # Reconfigure credentials
+fmdt --switch-project          # Switch Azure DevOps project
 ```
 
 ### Examples
@@ -169,6 +171,9 @@ bunx fmdt@latest
 
 # Reconfigure Azure DevOps credentials
 bunx fmdt@latest --configure
+
+# Switch to a different Azure DevOps project
+bunx fmdt@latest --switch-project
 
 # Using alias (after global install)
 fmdt --branch feature-123
