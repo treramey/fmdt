@@ -1,0 +1,2 @@
+# OpenTUI JSX runtime preload — required for TUI rendering
+preload = ["@opentui/solid/preload"]

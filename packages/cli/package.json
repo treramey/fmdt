@@ -1,0 +1,21 @@
+{
+  "name": "fmdt-v2",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "dependencies": {
+    "@fmdt/server": "workspace:*",
+    "@fmdt/tui": "workspace:*",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.33"
+  }
+}
